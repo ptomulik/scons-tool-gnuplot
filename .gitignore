@@ -49,7 +49,11 @@ __pycache__
 /QMTest/
 /runtest.py
 
-# Docbook tool
-/site_scons/site_tools/docbook/
+# Local scons extensions (here and in all subdirs)
+site_scons/
+
+# Graphical files (may be generated under test/ during wild experiments)
+*.png
+*.eps
 
 # vim: set syntax=conf tabstop=2 expandtab nospell:
