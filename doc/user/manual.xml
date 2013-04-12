@@ -98,9 +98,9 @@ one or more outputs. </para>
 about its <link linkend = "trm-gplot-inputfile"> input </link> and
 <link linkend = "trm-gplot-outputfile"> output </link> files, it is not trivial
 to extract this information. The gnuplot scripts are not so easily parsable
-from python, and gnuplot does not provide any facilities to extract this
-information (correct me please, if I'm wrong). Instead of writing a cumbersome
-SCons scanners and emitters, we chose different approach described below.
+from python, and gnuplot does not provide any facilities to extract
+dependencies (correct me please, if I'm wrong). Instead of writing cumbersome
+scanners and emitters, we chose different approach described below.
 </para> 
 
 
@@ -109,11 +109,11 @@ explicitly in <filename>SConscript</filename> (outputs may be given in
 <filename>SConscript</filename> too). Currently the only information extracted
 from gnuplot scripts is a list of output files defined with <command>set
 output</command> command. This works only for file names given by value (that is
-the file name is extracted correctly from <literal>set output "foo";</literal>
-but is not extracted at all from <literal>foo = "foo.png"; set output
-foo;</literal>). There are also other limitations, such as the <command>set
-output</command> has to be the only command in its line or that the file name
-must not contain quotes (for example, <literal>set output
+the file name is extracted correctly from <literal>set output "foo.png";
+</literal> but from <literal>foo = "foo.png"; set output foo;</literal> will
+not be extracted at all). There are also other limitations, such as that the
+<command>set output</command> has to be the only command in its line or that
+the file name must not contain quotes (for example, <literal>set output
 'str"ange".name';</literal> will not be processed correctly). More elaborate
 scanners/emitters may appear in the future. To avoid duplication and achieve
 some level of consistency between <filename>SConscript</filename>s and gnuplot
@@ -149,10 +149,27 @@ made available to the gnuplot script in form of predefined variables.  </para>
   may be defined via <literal>target</literal> positional argument and/or via
   <link linkend = "cv-gp_extoutputs"> <varname>gp_extoutputs</varname> </link>
   keyword parameter. You may mix both methods. The file names listed in 
-  <link linkend = "cv-gp_outputs"> <varname>gp_outputs</varname> </link> are
+  <link linkend = "cv-gp_extoutputs"> <varname>gp_extoutputs</varname> </link> are
   passed to <command>gnuplot</command> command through the command-line (as
   gnuplot variables). The script may then use these variables instead of
   hard-coded file names. </para>
+</section>
+
+<section id="basics.choosing-varnames">
+  <title>Choosing names for the command line variables</title>
+  You may decide what the names of the gnuplot variables should be. Just use
+  dictionaries instead of lists for 
+  <link linkend = "cv-gp_inputs"> <varname>gp_inputs</varname> </link>,
+  <link linkend = "cv-gp_outputs"> <varname>gp_outputs</varname> </link>, and
+  <link linkend = "cv-gp_extoutputs"> <varname>gp_extoutputs</varname> </link>,
+  for example
+  <programlisting>
+  <![CDATA[ 
+  GplotGraph('foo.gp', gp_outputs = { 'varname' : 'foo.png' } )
+  ]]>
+  </programlisting>
+  where <literal>'varname'</literal> is the name of the variable carrying out
+  the <literal>'foo.png'</literal> file name to gnuplot.
 </section>
 
 <section id="basics.how-gnuplot-invoked">
