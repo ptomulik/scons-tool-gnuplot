@@ -14,8 +14,15 @@ for details.
 REQUIREMENTS
 ------------
 
+To perform certain activities, you may need the following packages (listed per
+task).
+
 TO DOWNLOAD DEPENDENCIES FROM EXTERNAL REPOSITORIES
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes it may be necessary to download files from other people's repositories,
+for example test framework is necessary to run tests. We have some scripts to
+automatize the download process, and they require the following software
 
   - mercurial_ VCS (``hg``) 
 
@@ -45,7 +52,8 @@ ADDITIONAL STEPS
 ----------------
 
 If this is a fresh clone/checkout from repository, you may wish to perform a
-few additional steps as below
+few additional steps as below (this is mainly for gnuplot tool developers
+and package maintainers)
 
 DOWNLOAD DEPENDENCIES FROM EXTERNAL REPOSITORIES
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -57,8 +65,17 @@ on GNU systems with the script ``bin/download-deps.sh`` ::
 
     bin/download-deps.sh
 
+The development tree may be later cleaned-up from the downloaded files by::
+
+    bin/delete-deps.sh
+
 Particular projects, that this project depends on, are mentioned in the
-following subsections.
+following subsections. You may look through it if the above scripts do not
+work well on your platform. Otherwise, all of the following dependencies
+are handled by ``download-deps.sh`` and ``delete-deps.sh`` scripts.  
+
+All downloaded files are ignored by ``.gitignore``, so you don't have to worry
+about deleting them before doing commits.
 
 TESTING FRAMEWORK
 ^^^^^^^^^^^^^^^^^
@@ -90,8 +107,6 @@ be later removed with the ``bin/delete-test-framework.sh`` script::
 
 You may also delete manually files/directories comprising the framework.
 
-The testing framework is ignored by ``.gitignore``, so you don't have to worry
-about deleting it before doing commits.
 
 SCONS DOCBOOK TOOL
 ^^^^^^^^^^^^^^^^^^
@@ -111,6 +126,17 @@ placed as shown in table relative to the top-level source directory)
   ``docbook-xsl-<ver>/``    ``site_scons/site_tools/docbook/docbook-xsl-<ver>``
  ========================= =====================================================
 
+On GNU system you may use the ``bin/download-docbook-tool.sh``  script to
+download the docbook tool (requires ``hg`` to be installed on your system)::
+
+    bin/download-docbook-tool.sh
+
+The tool may be later removed with the ``bin/delete-docbook-tool.sh`` script::
+
+    bin/delete-test-framework.sh
+
+You may also delete manually files/directories comprising the tool package.
+
 RUNNING TESTS
 -------------
 
@@ -122,6 +148,9 @@ This requires the presence of the testing framework in the development tree.
 
 GENERATING DOCUMENTATION
 ------------------------
+
+Scons gnuplot tool has an API documentation and user manual. The documentation
+may be generated as follows (see also REQUIREMENTS).
 
 API DOCUMENTATION
 ^^^^^^^^^^^^^^^^^
