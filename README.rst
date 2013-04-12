@@ -78,7 +78,7 @@ All downloaded files are ignored by ``.gitignore``, so you don't have to worry
 about deleting them before doing commits.
 
 TESTING FRAMEWORK
-^^^^^^^^^^^^^^^^^
+`````````````````
 
 If you wish to run end-to-end tests for this tool, download the testing
 framework for scons extensions/tools (currently from Dirk Baechle's repository
@@ -109,7 +109,7 @@ You may also delete manually files/directories comprising the framework.
 
 
 SCONS DOCBOOK TOOL
-^^^^^^^^^^^^^^^^^^
+``````````````````
 
 If you wish to generate user's guide, you need to download locally the `scons
 docbook tool`_. It is obtainable from Dirk Baechle's repository hosted on
