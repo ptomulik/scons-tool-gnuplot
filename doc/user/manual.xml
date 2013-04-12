@@ -1,0 +1,1022 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Copyright (c) 2013 Pawel Tomulik <ptomulik@meil.pw.edu.pl>
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files (the
+  "Software"), to deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to
+  the following conditions:
+
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+  KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+  WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-->
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<article>
+  <title>The SCons Gnuplot tool</title>
+  <articleinfo>
+    <author>
+      <!-- <firstname>Pawe&#322;</firstname> -->
+      <firstname>Pawel</firstname>
+      <surname>Tomulik</surname>
+    </author>
+    <pubdate>2013-03-10</pubdate>
+  </articleinfo>
+<section id="basics"><title>Basics</title>
+<para>This tool tries to make working with <ulink
+url="http://gnuplot.info">Gnuplot</ulink> in SCons a little easier. It provides
+a generic builder named <emphasis>GplotGraph</emphasis> to generate graphs with
+gnuplot. The typical use of gnuplot is to generate one or more output files
+(with graphs) according to a recipe prescribed in user-provided gnuplot script(s).
+To generate the graphs, the script often reads data from input files (e.g.
+numerical data from <filename>*.csv</filename> files). The graphs are written to
+one or more outputs. </para>
+
+<para>Through this manual we'll use the following terminology:
+<glosslist>
+  <glossentry>
+    <glossterm id="trm-gplot-scriptfile">Script (file)</glossterm>
+    <glossterm id="trm-gplot-sourcefile">Source (file)</glossterm>
+    <glossdef><para>or gnuplot script. A file containing gnuplot commands
+    to be processed by gnuplot. The (list of) gnuplot script(s) (file names or
+    nodes) is provided by the user as the <literal>source</literal> positional
+    argument to a builder.
+    </para></glossdef>
+  </glossentry>
+  <glossentry>
+    <glossterm id="trm-gplot-inputfile">Input (file)</glossterm>
+    <glossdef><para>additional input, script input. Used to denote any
+    additional file needed by the <link linkend = "trm-gplot-scriptfile"> script
+    </link> (read access). For example, the script may read data series from
+    <varname>*.csv</varname> file as a part of <command>plot</command> command.
+    The input files are not mentioned in <literal>source</literal> parameter to
+    a builder, but may alternatively be listed via <link
+    linkend="cv-gp_inputs"> <varname>gp_inputs</varname></link> keyword
+    parameter. A single script may use more than one inputs.
+    </para></glossdef>
+  </glossentry>
+  <glossentry id="trm-gplot-outputfile">
+    <glossterm>Output (file)</glossterm>
+    <glossdef><para>or script output. Used to denote any file defined in the
+    script with <command>set output</command> command. Note, that a single
+    script may generate more than one outputs. Files produced by gnuplot
+    script, but not explicitly listed by <command>set output</command>
+    command, are called <link linkend="trm-gplot-extoutputfile"> extra outputs
+    </link> and may be listed in <link linkend="cv-gp_extoutputs">
+    <varname>gp_extoutputs</varname> </link> keyword parameter.
+    </para></glossdef>
+  </glossentry>
+  <glossentry id="trm-gplot-extoutputfile">
+    <glossterm>Extra output (file)</glossterm>
+    <glossdef><para>a file produced by gnuplot script that is not explicitly
+    defined by <command>set output</command> command. Extra outputs may be
+    listed in the <link linkend="cv-gp_extoutputs">
+    <varname>gp_extoutputs</varname> </link> keyword parameter. Extra outputs
+    are generated implicitly by some gnuplot terminals, for example
+    <literal>epslatex</literal> generates <filename>*.tex</filename> file as
+    normal output and <filename>*.eps</filename> as extra output.
+    </para></glossdef>
+  </glossentry>
+  
+</glosslist>
+</para>
+
+<para>Although the <literal>gnuplot</literal> script contains information
+about its <link linkend = "trm-gplot-inputfile"> input </link> and
+<link linkend = "trm-gplot-outputfile"> output </link> files, it is not trivial
+to extract this information. The gnuplot scripts are not so easily parsable
+from python, and gnuplot does not provide any facilities to extract this
+information (correct me please, if I'm wrong). Instead of writing a cumbersome
+SCons scanners and emitters, we chose different approach described below.
+</para> 
+
+
+<para>The list of all input files to gnuplot script has to be specified
+explicitly in <filename>SConscript</filename> (outputs may be given in
+<filename>SConscript</filename> too). Currently the only information extracted
+from gnuplot scripts is a list of output files defined with <command>set
+output</command> command. This works only for file names given by value (that is
+the file name is extracted correctly from <literal>set output "foo";</literal>
+but is not extracted at all from <literal>foo = "foo.png"; set output
+foo;</literal>). There are also other limitations, such as the <command>set
+output</command> has to be the only command in its line or that the file name
+must not contain quotes (for example, <literal>set output
+'str"ange".name';</literal> will not be processed correctly). More elaborate
+scanners/emitters may appear in the future. To avoid duplication and achieve
+some level of consistency between <filename>SConscript</filename>s and gnuplot
+scripts, the names of the inputs and outputs defined in
+<filename>SConscript</filename> may be passed to gnuplot via command line and
+made available to the gnuplot script in form of predefined variables.  </para>
+
+<section id="basics.specifying-inputs">
+  <title>Specifying input files explicitly</title>
+  <para>The <link linkend = "trm-gplot-inputfile">input files</link> (but not
+  <link linkend = "trm-gplot-sourcefile">sources</link>) are specified via
+  <link linkend = "cv-gp_inputs"> <varname>gp_inputs</varname> </link>
+  keyword parameter. The <link linkend = "cv-gp_inputs">
+  <varname>gp_inputs</varname> </link> are added as implicit dependencies to
+  each source listed in <varname>source</varname> positional parameter. </para>
+</section>
+
+<section id="basics.specifying-outputs">
+  <title>Specifying output files explicitly</title>
+  <para>The <link linkgend = "trm-gplot-outputfile">output</link> files may be
+  defined via <literal>target</literal> positional argument and/or via <link
+  linkend = "cv-gp_outputs"> <varname>gp_outputs</varname> </link> keyword
+  parameter. You may mix both methods. The file names listed in <link linkend =
+  "cv-gp_outputs"> <varname>gp_outputs</varname> </link> are passed to
+  <command>gnuplot</command> command through the command line (as gnuplot
+  variables). The script may then use these variables instead of hard-coded
+  file names. </para>
+</section>
+
+<section id="basics.specifying-extoutputs">
+  <title>Specifying extra output files explicitly</title>
+  <para>The <link linkend = "trm-gplot-extoutputfile">extra output</link> files
+  may be defined via <literal>target</literal> positional argument and/or via
+  <link linkend = "cv-gp_extoutputs"> <varname>gp_extoutputs</varname> </link>
+  keyword parameter. You may mix both methods. The file names listed in 
+  <link linkend = "cv-gp_outputs"> <varname>gp_outputs</varname> </link> are
+  passed to <command>gnuplot</command> command through the command-line (as
+  gnuplot variables). The script may then use these variables instead of
+  hard-coded file names. </para>
+</section>
+
+<section id="basics.how-gnuplot-invoked">
+  <title>How gnuplot is run</title>
+  <para>By default, <command>gnuplot</command> is started from the directory
+  containing <filename>SConsctruct/SConscript</filename> file invoking the
+  <literal>GplotGraph</literal> builder. Variant directories are respected,
+  and in VariantDir build the <command>gnuplot</command> is invoked from the
+  build dir. </para>
+
+  <para>
+  The default behavior may be changed by altering the <literal>chdir</literal>
+  parameter of <literal>GplotGraph</literal> builder. If you need to start
+  <command>gnuplot</command> from another directory, pass it via the
+  <literal>chdir</literal>.
+  <programlisting>
+  <![CDATA[ 
+  GplotGraph('foo.png', 'foo.gp', chdir = 'bar/')
+  ]]>
+  </programlisting>
+  If you pass string as <literal>chdir</literal> it is interpreted as directory
+  name relative to the place where <filename>SConsctruc/SConscript</filename>
+  lives (unless the name starts with <literal>#</literal>).
+  </para>
+</section>
+
+</section>
+
+<section id="examples"><title>Examples</title>
+
+This section contains several examples, starting from simplest ones and ending
+with most advanced ones.
+
+<section><title>Single output, everything hard-coded in *.gp script</title>
+<!-- singleout1 -->
+<example><title>Single output, everything hard-coded in *.gp script</title>
+<para>In this example we generate a file named
+<filename>singleout1.png</filename> containing the graph of
+<mathphrase>sin(x)</mathphrase> function.</para>
+<para>
+  <filename>singleout1.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # singleout1.gp
+  set terminal png;
+  set output "singleout1.png";
+  plot sin(x);
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph('singleout1') 
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#')
+  /usr/bin/gnuplot singleout1.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section><title>Single output, pass output file name via command-line</title>
+<!-- singleout2 -->
+<example><title>Single output, pass output file name via command-line</title>
+<para>In this example we generate a file named
+<filename>singleout2.png</filename> containing the graph of
+<mathphrase>sin(x)</mathphrase> function. The name of the output file is
+defined in <filename>SConsctruct</filename> (the <link linkend =
+"cv-gp_outputs"> <varname>gp_outputs</varname> </link> parameter) and
+passed to gnuplot via command line as a gnuplot variable named
+<varname>output1</varname>.</para>
+<para>
+  <filename>singleout2.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # singleout2.gp
+  set terminal png;
+  set output output1;
+  plot sin(x);
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph('singleout2', gp_outputs = [ 'singleout2.png' ]) 
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#')
+  /usr/bin/gnuplot -e 'output1="singleout2.png"' singleout2.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section><title>Single input and output, everything hard-coded in *.gp 
+script</title>
+<!-- singleinout1 -->
+<example><title>Single input and output, everything hard-coded in *.gp
+script</title>
+<para>In this example we generate a file named
+<filename>singleinout1.png</filename> containing a graph of numerical data from
+<filename>singleinout1.csv</filename> file. The names of the input and output
+files are hard-coded in <filename>singleinout1.gp</filename> script.</para>
+<para>
+  <filename>singleinout1.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # singleinout1.gp
+  set terminal png;
+  set output "singleinout1.png";
+  plot "singleinout1.csv" with lines;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph('singleinout1', gp_inputs = ['singleinout1.csv']) 
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#')
+  /usr/bin/gnuplot -e 'input1="singleinout1.csv"' singleinout1.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section><title>Single input and output, pass file names via command-line</title>
+<!-- singleinout2 -->
+<example><title>Single input and output, pass file names via command-line</title>
+<para>In this example we generate a file named
+<filename>singleinout2.png</filename> containing a graph of numerical data from
+<filename>singleinout2.csv</filename> file. The input and output files are
+defined in <filename>SConsctruct</filename> (the <link linkend =
+"cv-gp_inputs"> <varname>gp_inputs</varname> </link> and <link linkend =
+"cv-gp_outputs"> <varname>gp_outputs</varname> </link> parameters) and are
+passed to gnuplot via command line as a gnuplot variables named
+<varname>input1</varname> and <varname>output1</varname> respectively.</para>
+<para>
+  <filename>singleinout2.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # singleinout2.gp
+  set terminal png;
+  set output output1
+  plot input1 with lines;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph('singleinout2',  
+    gp_outputs= ['singleinout2.png'],
+    gp_inputs = ['singleinout2.csv'] ) 
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#')
+  /usr/bin/gnuplot -e 'output1="singleinout2.png"' \
+    -e 'input1="singleinout2.csv"' singleinout2.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section><title>Single output and two input files, pass file names via command
+line</title>
+<!-- doublein1 -->
+<example><title>Single output and two input files, pass file names via command
+line</title>
+<para>In this example we generate a file named
+<filename>doublein1.png</filename> containing a graph of numerical data from
+separate files <filename>doublein1_1.csv</filename> and
+<filename>doublein1_2.csv</filename>. The names of the input and output files
+are passed to <filename>doublein1.gp</filename> script via command line.</para>
+<para>
+  <filename>doublein1.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # doublein1.gp
+  set terminal png;
+  set output output1
+  plot input1 with lines, input2 with points;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph('doublein1',
+    gp_outputs= ['doublein1.png'],
+    gp_inputs = ['doublein1_1.csv', 'doublein1_2.csv'] ) 
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#')
+  /usr/bin/gnuplot -e 'input2="doublein1_2.csv"' \
+    -e 'input1="doublein1_1.csv"' -e 'output1="doublein1_1.png"' \
+    -e 'output2="doublein1_2.png"' doublein1.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section>
+<title>Two input and two output files, pass file names via command line </title>
+<!-- doubleinout1 -->
+<example>
+<title>Two input and two output files, pass file names via command line </title>
+<para>In this example we generate two files named
+<filename>doubleinout1_1.png</filename> and
+<filename>doubleinout1_2.png</filename> containing graphs of data series from
+files <filename>doubleinout1_1.csv</filename> and
+<filename>doubleinout1_2.csv</filename> respectively. The names of the input and
+output files are passed to <filename>doubleinout1.gp</filename> script via
+command line.</para>
+<para>
+  <filename>doubleinout1.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # doubleinout1.gp
+  set terminal png;
+  set output output1;
+  plot input1 with lines;
+  set output output2;
+  plot input2 with lines;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph('doubleinout1',  
+      gp_outputs= ['doubleinout1_1.png', 'doubleinout1_2.png'],
+      gp_inputs = ['doubleinout1_1.csv', 'doubleinout1_2.csv'] ) 
+
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#')
+  /usr/bin/gnuplot -e 'input2="doubleinout1_2.csv"' \
+    -e 'input1="doubleinout1_1.csv"' -e 'output1="doubleinout1.png"' \
+    doubleinout1.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section>
+<title>Processing multiple scripts at once</title>
+<!-- multiscript1 -->
+<example>
+<title>Processing multiple scripts at once</title>
+<para>In this example we generate two files named
+<filename>multiscript1_1.png</filename> and
+<filename>multiscript1_2.png</filename> containing graphs of numerical data from
+file <filename>multiscript1.csv</filename>. We process in single command two
+gnuplot scripts named <filename>multiscript1_1.gp</filename> and
+<filename>multiscript1_2.gp</filename>. </para>
+<para>
+  <filename>multiscript1_1.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # multiscript1_1.gp
+  set terminal png;
+  set output output1
+  plot input1 with lines;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>multiscript1_2.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # multiscript1_2.gp
+  set terminal png;
+  set output output2
+  plot input1 with dots;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph(['multiscript1_1.gp', 'multiscript1_2.gp'], 
+      gp_outputs= ['multiscript1_1.png', 'multiscript1_2.png'],
+      gp_inputs = ['multiscript1.csv'] ) 
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#')
+  /usr/bin/gnuplot -e 'output2="multiscript1_2.png"' \
+    -e 'output1="multiscript1_1.png"' \
+    -e 'input1="multiscript1.csv"' \
+    multiscript1_1.gp multiscript1_2.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section><title>Controlling the names of command-line variables</title>
+<!-- namedinout1 -->
+<example><title>Controlling the names of command-line variables</title>
+<para>In this example we generate two files named
+<filename>namedinout1_1.png</filename> and
+<filename>namedinout1_2.png</filename> containing graphs of numerical data from
+files <filename>namedinout1_1.csv</filename> and
+<filename>namedinout1_2.csv</filename> respectively. The names of the input and
+output files are passed to <filename>namedinout1.gp</filename> script via
+command line variables. The names of these variables are controlled by defining
+<link linkend = 'cv-gp_inputs'>gp_inputs</link> and <link linkend =
+'cv-gp_outputs'>gp_outputs</link> to be dictionaries. </para>
+<para>
+  <filename>namedinout1.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # namedinout1.gp
+  set terminal png;
+  set output first_out;
+  plot first_in with lines;
+  set output second_out;
+  plot second_in with lines;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph('namedinout1',  
+    gp_outputs= { 'first_out' : 'namedinout1_1.png', 
+                  'second_out': 'namedinout1_2.png'},
+    gp_inputs = { 'first_in' : 'namedinout1_1.csv', 
+                  'second_in' : 'namedinout1_2.csv' } ) 
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#')
+  /usr/bin/gnuplot -e 'first_in="namedinout1_1.csv"' \
+    -e 'second_out="namedinout1_2.png"' \
+    -e 'first_out="namedinout1_1.png"' \
+    -e 'second_in="namedinout1_2.csv"' namedinout1.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section><title>Using variant directories.</title>
+<!-- variant1 -->
+<example><title>Using variant directories.</title>
+<para>In this example we generate a file
+<filename>build/variant1.png</filename> containing a graph of numerical data from 
+file <filename>src/variant1.csv</filename>. The directory
+named <filename>build</filename> is the variant build directory.</para>
+<para>
+  <filename>src/variant1.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # src/variant1.gp
+  set terminal png;
+  set output output1;
+  plot input1 with lines;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>src/SConscript</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # src/SConscript
+  Import(['env'])
+  env.GplotGraph('variant1',
+      gp_outputs = ['variant1.png'],
+      gp_inputs  = ['variant1.csv'])
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  VariantDir('build/', 'src/', duplicate = 0)
+  SConscript('build/SConscript', exports = ['env'])
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#/build')
+  /usr/bin/gnuplot -e 'output1="variant1.png"' \
+    -e 'input1="../src/variant1.csv"' ../src/variant1.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+<section><title>Changing working directory with chdir.</title>
+<!-- chdir1 -->
+<example><title>Changing working directory with chdir.</title>
+<para>In this example we generate a file <filename>out/chdir1.png</filename>
+containing a graph of numerical data from file <filename>in/chdir1.csv</filename>.
+The gnuplot script is <filename>./chdir1.gp</filename> and is stored in same
+directory as the <filename>SConstruct</filename>. All the job will be done in
+the <filename>out</filename> subdirectory.</para>
+<para>
+  <filename>chdir1.gp</filename> script:
+  <programlisting>
+  <![CDATA[ 
+  # chdir1.gp
+  set terminal png;
+  set output output1;
+  plot input1 with lines;
+  ]]>
+  </programlisting>
+</para>
+<para>
+  <filename>SConstruct</filename> file:
+  <programlisting>
+  <![CDATA[ 
+  # SConstruct
+  env = Environment(tools = ['gnuplot'])
+  env.GplotGraph( 'chdir1.gp',
+      gp_outputs = ['out/chdir1.png'],
+      gp_inputs =  ['in/chdir1.csv'],
+      chdir='out') 
+  ]]>
+  </programlisting>
+</para>
+Compiling the example yields (note, <literal>#</literal> is a placeholder for
+top level source directory)
+
+<screen>
+  <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
+  os.chdir('#/out')
+  /usr/bin/gnuplot -e 'output1="chdir1.png"' \
+    -e 'input1="../in/chdir1.csv"' ../chdir1.gp
+  os.chdir('#')
+</screen>
+</example>
+</section>
+
+</section>
+
+
+<!--<section id="builders"><title>Builders</title>-->
+
+<!--<variablelist><title>Builders provided by SCons gnuplot tool</title>
+</variablelist>-->
+
+<section id="cvars"><title>Construction variables</title>
+
+<variablelist><title>Construction variables used by gnuplot tool</title>
+
+  <!-- GNUPLOT-->
+  <varlistentry id = "cv-gnuplot">
+    <term> <varname>GNUPLOT</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>'gnuplot'</literal></para>
+      <para>Path to gnuplot executable.</para>
+    </listitem>
+  </varlistentry>
+
+  <!-- GNUPLOTCOM -->
+  <varlistentry id = "cv-gnuplotcom">
+    <term> <varname>GNUPLOTCOM</varname> </term>
+    <listitem>
+      <para>The entire command line used to invoke <command>gnuplot</command>
+      command.</para>
+    </listitem>
+  </varlistentry>
+
+  <!-- GNUPLOTCOMSTR -->
+  <varlistentry id = "cv-gnuplotcomstr">
+    <term> <varname>GNUPLOTCOMSTR</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>''</literal></para>
+      <para>A string displayed by scons when running <command>gnuplot</command>
+      command.</para>
+    </listitem>
+  </varlistentry>
+
+  <!-- GNUPLOTFLAGS -->
+  <varlistentry id = "cv-gnuplotflags">
+    <term> <varname>GNUPLOTFLAGS</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>None</literal></para>
+      <para>Additional command-line options to gnuplot command.</para>
+    </listitem>
+  </varlistentry>
+
+  <!-- GPLOTSUFFIX -->
+  <varlistentry id = "cv-gplotsuffix">
+    <term> <varname>GPLOTSUFFIX</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>'.gp'</literal></para>
+      <para>Suffix of gnuplot script (source) files.</para>
+    </listitem>
+  </varlistentry>
+
+  <!-- GPLOTINVAR -->
+  <varlistentry id = "cv-gplotinvar">
+    <term> <varname>GPLOTINVAR</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>'input'</literal>
+      </para>
+      <para>Base (prefix) of the placeholder for input file names. Used  when
+      the  <link linkend="cv-gp_inputs"> <varname>gp_inputs</varname>
+      </link> <emphasis>is not a dictionary</emphasis>. 
+      </para>
+
+      <para>If, for example, the default value (<literal>'input'</literal>) is
+      used, and one sets <varname>gp_inputs</varname> <literal> = ['a.csv',
+      'b.csv']</literal>, then the gnuplot script will see variables
+      <varname>input1</varname> and <varname>input2</varname> as bellow
+      <programlisting>
+        <![CDATA[ input1 = "a.csv";
+         input2 = "b.csv"; ]]>
+      </programlisting>
+      and the plotting code may use them as follows
+      <programlisting>
+        <![CDATA[ plot input1 with lines, \
+              input2 with points; ]]>
+      </programlisting>
+      If we set <code><varname>GPLPOTINVAR</varname> = 'foo'</code> in
+      <filename>SConscript</filename> however, the script will see
+      <programlisting>
+        <![CDATA[ foo1 = "a.csv";
+         foo2 = "b.csv"; ]]>
+      </programlisting>
+      </para>
+    </listitem>
+  </varlistentry>
+
+  <!-- GPLOTOUTVAR -->
+  <varlistentry id = "cv-gplotoutvar">
+    <term> <varname>GPLOTOUTVAR</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>'output'</literal>
+      </para>
+      <para>Base (prefix) of the placeholder used as an output file name.  Used
+      when the <link linkend="cv-gp_outputs"> <varname>gp_outputs</varname>
+      </link> <emphasis>is not a dictionary</emphasis>. 
+      </para>
+
+      <para>If, for example, the default value (<literal>"output"</literal>) is
+      used, and one sets <varname>gp_outputs</varname> <literal> = ['a.eps',
+      'b.tex' ]</literal>, then the gnuplot script will see the variables
+      <programlisting>
+        <![CDATA[ output1 = "a.eps";
+         output2 = "b.tex"; ]]>
+      </programlisting>
+      and the plotting code may use them as follows
+      <programlisting>
+        <![CDATA[ set output output1;
+         # ...
+         set output output2; ]]>
+      </programlisting>
+      If we set <code><varname>GPLPOTOUTVAR</varname> = 'foo'</code> in
+      <filename>SConscript</filename> however, the script will see
+      <programlisting>
+        <![CDATA[ foo1 = "a.eps";
+         foo2 = "b.tex"; ]]>
+      </programlisting>
+      </para>
+    </listitem>
+  </varlistentry>
+
+  <!-- GPLOTEOUTVAR -->
+  <varlistentry id = "cv-gploteoutvar">
+    <term> <varname>GPLOTEOUTVAR</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>'eoutput'</literal>
+      </para>
+      <para>Base (prefix) of the placeholder for extra outputs.  Used when the
+      <link linkend="cv-gp_extoutputs"> <varname>gp_extoutputs</varname>
+      </link> is <emphasis>not a dictionary</emphasis>. 
+      </para>
+
+      <para>If, for example, the default value (<literal>'eoutput'</literal>) is
+      used, and one sets <varname>gp_extoutputs</varname> <literal> = ['a.eps',
+      'b.eps' ]</literal>, then the gnuplot script will see the variables
+      <programlisting>
+        <![CDATA[ eoutput1 = "a.eps";
+         eoutput2 = "b.eps"; ]]>
+      </programlisting>
+      If we set <code><varname>GPLOTEOUTVAR</varname> = 'foo'</code> in
+      <filename>SConscript</filename> however, the script will see
+      <programlisting>
+        <![CDATA[ foo1 = "a.eps";
+         foo2 = "b.eps"; ]]>
+      </programlisting>
+      </para>
+    </listitem>
+  </varlistentry>
+
+</variablelist>
+</section>
+
+<section id="bldargs"><title>Builder arguments</title>
+
+<para>In addition to standard <varname>target</varname> and
+<varname>source</varname> arguments, the <literal>GplotBuilder</literal> has
+following arguments that may need some explanation.</para>
+
+<variablelist><title>Builder arguments</title>
+  
+  <!-- gp_inputs -->
+  <varlistentry id="cv-chdir"> 
+    <term> <varname>chdir</varname> </term>
+    <listitem>
+    <para><emphasis>Default value:</emphasis> <literal>_null</literal> </para>
+    <para>Set current working directory for <command>gnuplot</command> command.
+    </para></listitem>
+  </varlistentry>
+
+  <!-- gp_inputs -->
+  <varlistentry id="cv-gp_inputs"> 
+    <term> <varname>gp_inputs</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>None</literal> </para>
+      <para>Additional inputs used by gnuplot script(s). The
+      <varname>gp_inputs</varname> may be a list or a dictionary.</para>
+
+      <para>In case of list, it should contain file names (or node objects)
+      of files used by gnuplot script(s) as additional inputs. The order of
+      the files in the list is important.  The file names are passed to gnuplot
+      via command-line options and are visible in the gnuplot script as
+      variables named <varname>input1</varname>, <varname>input2</varname>,
+      ..., etc.. If, for example, the list is defined as
+      <programlisting> 
+        <![CDATA[ ['input_a.csv', 'input_b.csv'] ]]>
+      </programlisting>
+      the file names will be provided to gnuplot script(s) such as if the
+      following variables were defined in gnuplot script(s)
+      <programlisting>
+        <![CDATA[ input1 = "input_a.csv";
+         input2 = "input_b.csv"; ]]>
+      </programlisting>
+      The gnuplot script may then use the placeholders instead of file names,
+      for example
+      <programlisting>
+        <![CDATA[ plot input1 with lines, \
+              input2 with points; ]]>
+      </programlisting>
+      The prefix <literal>'input'</literal> may be changed to another one with
+      <link linkend="cv-gplotinvar">
+      <varname>GPLOTINVAR</varname></link>.
+      </para>
+
+      <para>In case of dictionary, it should be a dict of the form 
+      <literal>{ 'placeholder' : file }</literal>, where the
+      <literal>placeholder</literal> is the placeholder used in gnuplot script
+      instead of file name. The <literal>file</literal> is either string 
+      containing file name, or SCons node object. If, for example, the
+      <varname>gp_inputs</varname> is a dictionary as below
+      <programlisting>
+        <![CDATA[ { 'a' : "input_a.csv", 
+           'b: : "input_b.csv" } ]]>
+      </programlisting>
+      then the file names are passed to the gnuplot script(s) via command line
+      options, and are visible as if they were defined by 
+      <programlisting>
+        <![CDATA[ a = "input_a.csv";
+         b = "input_b.csv"; ]]>
+      </programlisting>
+      in the script(s). The script may then use placeholders
+      <literal>a</literal> and <literal>b</literal> as below
+      <programlisting>
+        <![CDATA[ plot a with lines, \
+              b with points; ]]>
+      </programlisting>
+      </para>
+
+    </listitem>
+  </varlistentry>
+
+  <!-- gp_outputs -->
+  <varlistentry id="cv-gp_outputs"> 
+    <term> <varname>gp_outputs</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>None</literal> </para>
+      <para>Outputs generated by gnuplot script(s). The
+      <varname>gp_outputs</varname> may be a list or a dictionary.</para>
+
+      <para>In case of list, it should contain file names (or node objects)
+      of outputs generated by gnuplot script(s). The order of the files in the
+      list is important. The file names are passed to gnuplot via command-line
+      options and are visible in the gnuplot script as variables named
+      <varname>output1</varname>, <varname>output2</varname>,
+      ..., etc.. If, for example, the list is defined as
+      <programlisting> 
+        <![CDATA[ ['output_a.png', 'output_b.png'] ]]>
+      </programlisting>
+      the file names will be provided to gnuplot script(s) such as if the
+      following variables were defined in gnuplot script(s)
+      <programlisting>
+        <![CDATA[ output1 = "output_a.png";
+         output2 = "output_b.png"; ]]>
+      </programlisting>
+      The gnuplot script may then use the placeholders instead of file names,
+      for example
+      <programlisting>
+        <![CDATA[ set output output1;
+         # ...
+         set output output2; ]]>
+      </programlisting>
+      The prefix <literal>'output'</literal> may be changed to another one with
+      <link linkend="cv-gplotoutvar">
+      <varname>GPLOTOUTVAR</varname></link>.
+      </para>
+
+      <para>In case of dictionary, it should be a dict of the form 
+      <literal>{ 'placeholder' : file }</literal>, where the
+      <literal>placeholder</literal> is the placeholder used in gnuplot script
+      instead of file name. The <literal>file</literal> is either string 
+      containing file name, or SCons node object. If, for example, the
+      <varname>gp_outputs</varname> is a dictionary as below
+      <programlisting>
+        <![CDATA[ { 'a' : "output_a.png", 
+           'b: : "output_b.png" } ]]>
+      </programlisting>
+      then the file names are passed to the gnuplot script(s) via command line
+      options, and are visible as if they were defined by 
+      <programlisting>
+        <![CDATA[ a = "output_a.png";
+         b = "output_b.png"; ]]>
+      </programlisting>
+      in the script(s). The script may then use placeholders
+      <literal>a</literal> and <literal>b</literal> as below
+      <programlisting>
+        <![CDATA[ set output a;
+         # ...
+         set output b; ]]>
+      </programlisting>
+      </para>
+
+    </listitem>
+  </varlistentry>
+
+  <!-- gp_extoutputs -->
+  <varlistentry id="cv-gp_extoutputs"> 
+    <term> <varname>gp_extoutputs</varname> </term>
+    <listitem>
+      <para><emphasis>Default value:</emphasis> <literal>None</literal> </para>
+      <para>Extra output files generated by gnuplot script(s). The
+      <varname>gp_extoutputs</varname> may be a list or a dictionary.</para>
+
+      <para>In case of list, it should contain file names (or node objects)
+      of extra output files generated by gnuplot script(s). The order of the
+      files in the list may be important. The file names are passed to gnuplot
+      via command-line options and are visible in the gnuplot script as
+      variables named <varname>eoutput1</varname>, <varname>eoutput2</varname>,
+      ..., etc.. If, for example, the list is defined as
+      <programlisting> 
+        <![CDATA[ ['eout_a.eps', 'eout_b.eps'] ]]>
+      </programlisting>
+      the file names will be provided to gnuplot script(s) such as if the
+      following variables were defined in gnuplot script(s)
+      <programlisting>
+        <![CDATA[ eoutput1 = "eout_a.csv";
+         eoutput2 = "eout_b.csv"; ]]>
+      </programlisting>
+      The prefix <literal>'eoutput'</literal> may be changed to another one with
+      <link linkend="cv-gploteoutvar">
+      <varname>GPLOTEOUTVAR</varname></link>.
+      </para>
+
+      <para>In the case of dictionary, it should be a dict of the form 
+      <literal>{ 'placeholder' : file }</literal>, where the
+      <literal>placeholder</literal> is the placeholder used in gnuplot script
+      instead of file name. The <literal>file</literal> is either string 
+      containing file name, or SCons node object. If, for example, the
+      <varname>gp_extoutputs</varname> is a dictionary as below
+      <programlisting>
+        <![CDATA[ { 'a' : "eout_a.eps", 
+           'b: : "eout_b.eps" } ]]>
+      </programlisting>
+      then the file names are passed to the gnuplot script(s) via command line
+      options, and are visible as if they were defined by 
+      <programlisting>
+        <![CDATA[ a = "eout_a.epd";
+         b = "eout_b.eps"; ]]>
+      </programlisting>
+      in the script(s). 
+      </para>
+
+    </listitem>
+  </varlistentry>
+
+</variablelist>
+
+</section>
+</article>
