@@ -28,8 +28,6 @@ __docformat__ = "restructuredText"
 
 import SCons.Builder
 
-class _null : pass
-
 class _GplotRelTo(object):
     """Given a sequence of ``nodes`` return their paths relative to predefined
     ``base``.
@@ -50,21 +48,19 @@ class _GplotRelTo(object):
         return [ self.base.rel_path(node) for node in nodes ]
    
 def _GplotFvars(fdict, base):
-    """Prepare command line variables to be passed to gnuplot. The variables
-    contain input and output file names to gnuplot script.
+    """Prepare list of gnuplot variables contaning file names.
 
     **Arguments**
         
-        - *fdict* - file dictionary as returned by ``_gplot_fdict()``,
-        - *base* - base node, the returned filenames will be relative to this
-          node,
+        - *fdict* - dictionary with files (nodes) as returned by ``_gplot_fdict()``,
+        - *base* - base directory (node),
 
     **Returns**
 
-        a list of ``'name="value"'`` strings.
+        a list of ``'variable="path"'`` strings, the ``variable`` s are keys
+        from ``fdict`` and ``path``s are file names relative to ``base``
     """
     import SCons.Util
-    
     if not fdict: return []
     return [ "'%s=\"%s\"'" % (k, base.rel_path(v)) for k,v in fdict.items() ]
 
@@ -191,7 +187,10 @@ def _gplot_scan_for_outputs(env, base, source):
     return nodes
 
 def _GplotScanner(node, env, path, arg):
-    """Scan gnuplot script for implicit dependencies"""
+    """Scan gnuplot script for implicit dependencies.
+    
+    This scanner also handles the ``gp_inputs`` parameter.
+    """
     deps = []
 
     # Add input files to implicit dependencies
@@ -207,11 +206,6 @@ def _GplotEmitter(target, source, env):
     prepares the list of implicit dependencies for further processing in the
     scanner (see `_GplotScanner()`).
     """
-    env['_gp_fdict'] = _gplot_fdict(env)
-
-    try: inputs = env['gp_inputs']
-    except KeyError: pass
-    else: env['_gp_input_nodes'] = _gplot_arg2nodes(env, inputs)
 
     outnodes = []
     try: outputs = env['gp_outputs']
@@ -221,8 +215,6 @@ def _GplotEmitter(target, source, env):
     try: outputs = env['gp_extoutputs']
     except KeyError: pass
     else: outnodes.extend(_gplot_arg2nodes(env, outputs))
-
-    # env['_gp_output_nodes'] = outnodes
 
     # scan source files for outpus
     outnodes2 = _gplot_scan_for_outputs(env, env['_gp_chdir'], source)
@@ -236,39 +228,52 @@ def _GplotEmitter(target, source, env):
 
     return  target + outnodes, source 
 
-def GplotGraph(env, target, source=_null, chdir=_null, **kw):
-    """The GplotGraph builder (wrapper actually)
-    
-    **Arguments**
-    
-        - *env* - the scons Environment object,
-        - *target* - (a list of) target node(s) or their names,
-        - *source* - (a list of) source node(s) or their names,
-        - *chdir* - working directory for gnuplot,
-        - *kw* - keywords passed to real builder.
-    """
-    import SCons.Util
+class _GplotBuilderObject (SCons.Builder.BuilderBase):
+    """Gnuplot builder object"""    
 
-    if target and (source is _null): 
-        source = target
-        target = []
+    def _execute(self, env, target, source, *args):
 
-    ekw = kw.copy()
-    if chdir is _null:
-        chdir = env.fs.getcwd()
-        ekw['_gp_chdir'] = chdir
-    elif not chdir:
-        # Top source dir
-        chdir = SCons.Builder._null
-        ekw['_gp_chdir'] = env.Dir('#') 
-    else:
-        if SCons.Util.is_String(chdir):
-            chdir = env.Dir(chdir, env.fs.getcwd())
+        # Prepare our environment override a little bit
+        
+        try: inputs = env['gp_inputs']
+        except KeyError: pass
+        else: env['_gp_input_nodes'] = _gplot_arg2nodes(env, inputs)
+
+        env['_gp_fdict'] = _gplot_fdict(env)
+        sup = super(_GplotBuilderObject, self)
+        return sup._execute(env, target, source, *args)
+
+    def __call__(self, env, target=None, source=None, chdir=1, **kw):
+        import SCons.Node.FS
+
+        ekw = kw.copy()
+        
+        # - by default change dir to the directory of calling SCons script,
+        # - if chdir is a string, interpret it as a path relative to the
+        #   calling SCons script,
+        # - if chdir is None/False, revert SCons default behavior: run the
+        #   command from the directory of the top level SConstruct.
+        if chdir:
+            if not isinstance(chdir, SCons.Node.FS.Base):
+                # this is our default behavior
+                chdir = env.fs.getcwd()
+            elif SCons.Util.is_String(chdir):
+                chdir = env.Dir(chdir, env.fs.getcwd())
             ekw['_gp_chdir'] = chdir
         else:
-            ekw['_gp_chdir'] = chdir
+            chdir = SCons.Builder._null
+            ekw['_gp_chdir'] = env.Dir('#') 
+       
+        if target is None: target = []
 
-    return env._GplotGraphBuilder(target, source, chdir, **ekw)
+        sup = super(_GplotBuilderObject, self)
+        return sup.__call__(env, target, source, chdir, **ekw)
+
+def _GplotBuilder(**kw):
+    """A factory for gnuplot builder objects"""
+    if 'action' in kw:
+        kw['action'] = SCons.Action.Action(kw['action']) 
+    return _GplotBuilderObject(**kw)
 
 def _detect_gnuplot(env):
     if env.has_key('GNUPLOT'):
@@ -284,14 +289,13 @@ def generate(env):
     env['GNUPLOT'] = gnuplot
 
     fvars   = '$( ${_concat( "%s " % GPLOTVARPREFIX, ' \
-            + '_GplotFvars( _gp_fdict, _gp_chdir ), ' \
+            + '_GplotFvars( _gp_fdict, _gp_chdir), ' \
             + 'GPLOTVARSUFFIX, __env__ )} $)'
 
     srcs    = '$( ${_concat( "", SOURCES, "", __env__, ' \
             + '_GplotRelTo(_gp_chdir))} $)'
 
     gnuplotcom  = '$GNUPLOT $GNUPLOTFLAGS %s %s' % (fvars, srcs)
-    import SCons.Defaults
     env.SetDefault( GPLOTSUFFIX     = '.gp',
                     GPLOTINVAR      = 'input',
                     GPLOTOUTVAR     = 'output',
@@ -306,21 +310,11 @@ def generate(env):
         env['BUILDER']['GplotGraph']
     except KeyError:
         scanner = SCons.Script.Scanner( function = _GplotScanner, argument = None )
-        env.Append( BUILDERS = { 
-            '_GplotGraphBuilder' :  SCons.Builder.Builder( 
-                                action = '$GNUPLOTCOM',
-                                src_suffix = '$GPLOTSUFFIX',
-                                emitter = _GplotEmitter,
-                                source_scanner = scanner
-                            ) 
-        } )
-
-    try:
-        env.AddMethod(GplotGraph, 'GplotGraph')
-    except AttributeError:
-        # Looks like we use a pre-0.98 version of SCons...
-        from SCons.SCript.SConscript import SConsEnvironment
-        SConsEnvironment.GplotGraph = GplotGraph
+        builder = _GplotBuilder( action = '$GNUPLOTCOM',
+                                 src_suffix = '$GPLOTSUFFIX',
+                                 emitter = _GplotEmitter,
+                                 source_scanner = scanner )
+        env.Append( BUILDERS = { 'GplotGraph' : builder } )
 
 def exists(env):
     return _detect_gnuplot(env)

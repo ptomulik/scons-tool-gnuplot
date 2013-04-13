@@ -174,6 +174,7 @@ made available to the gnuplot script in form of predefined variables.  </para>
 
 <section id="basics.how-gnuplot-invoked">
   <title>How gnuplot is run</title>
+
   <para>By default, <command>gnuplot</command> is started from the directory
   containing <filename>SConsctruct/SConscript</filename> file invoking the
   <literal>GplotGraph</literal> builder. Variant directories are respected,
@@ -184,7 +185,7 @@ made available to the gnuplot script in form of predefined variables.  </para>
   The default behavior may be changed by altering the <literal>chdir</literal>
   parameter of <literal>GplotGraph</literal> builder. If you need to start
   <command>gnuplot</command> from another directory, pass it via the
-  <literal>chdir</literal>.
+  <literal>chdir</literal>. 
   <programlisting>
   <![CDATA[ 
   GplotGraph('foo.png', 'foo.gp', chdir = 'bar/')
@@ -193,6 +194,12 @@ made available to the gnuplot script in form of predefined variables.  </para>
   If you pass string as <literal>chdir</literal> it is interpreted as directory
   name relative to the place where <filename>SConsctruc/SConscript</filename>
   lives (unless the name starts with <literal>#</literal>).
+  </para>
+
+  <para>
+  You may also set <varname>chdir</varname> explicitly to
+  <literal>None</literal> or <literal>False</literal> to revert to default
+  SCons behavior (running from top-level source directory).
   </para>
 </section>
 
@@ -854,8 +861,14 @@ following arguments that may need some explanation.</para>
   <varlistentry id="cv-chdir"> 
     <term> <varname>chdir</varname> </term>
     <listitem>
-    <para><emphasis>Default value:</emphasis> <literal>_null</literal> </para>
+    <para><emphasis>Default value:</emphasis> <literal>1</literal> </para>
     <para>Set current working directory for <command>gnuplot</command> command.
+    By default, the working directory is changed to the directory of the
+    <filename>SConscript</filename> file from which the builder is invoked. If
+    you set <varname>chdir</varname> to string, it is interpreted as a path
+    relative to the calling <filename>SConscript</filename>. Setting
+    <varname>chdir</varname> to <literal>None/False</literal> or such, reverts
+    to SCons default behavior.
     </para></listitem>
   </varlistentry>
 
