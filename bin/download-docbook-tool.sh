@@ -22,7 +22,7 @@
 
 # download-docbook-tool.sh
 #
-# Download test framework for external tools.
+# Download SCons docbook tool. 
 
 set -e
 

@@ -246,8 +246,6 @@ class _GplotBuilderObject (SCons.Builder.BuilderBase):
     def __call__(self, env, target=None, source=None, chdir=1, **kw):
         import SCons.Node.FS
 
-        ekw = kw.copy()
-        
         # - by default change dir to the directory of calling SCons script,
         # - if chdir is a string, interpret it as a path relative to the
         #   calling SCons script,
@@ -259,15 +257,15 @@ class _GplotBuilderObject (SCons.Builder.BuilderBase):
                 chdir = env.fs.getcwd()
             elif SCons.Util.is_String(chdir):
                 chdir = env.Dir(chdir, env.fs.getcwd())
-            ekw['_gp_chdir'] = chdir
+            kw['_gp_chdir'] = chdir
         else:
             chdir = SCons.Builder._null
-            ekw['_gp_chdir'] = env.Dir('#') 
+            kw['_gp_chdir'] = env.Dir('#') 
        
         if target is None: target = []
 
         sup = super(_GplotBuilderObject, self)
-        return sup.__call__(env, target, source, chdir, **ekw)
+        return sup.__call__(env, target, source, chdir, **kw)
 
 def _GplotBuilder(**kw):
     """A factory for gnuplot builder objects"""
