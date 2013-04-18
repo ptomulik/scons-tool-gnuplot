@@ -420,8 +420,8 @@ top level source directory)
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
   os.chdir('#')
   /usr/bin/gnuplot -e 'input2="doublein1_2.csv"' \
-    -e 'input1="doublein1_1.csv"' -e 'output1="doublein1_1.png"' \
-    -e 'output2="doublein1_2.png"' doublein1.gp
+    -e 'output1="doublein1.png"' \
+    -e 'input1="doublein1_1.csv"' doublein1.gp
   os.chdir('#')
 </screen>
 </example>
@@ -471,9 +471,9 @@ top level source directory)
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
   os.chdir('#')
-  /usr/bin/gnuplot -e 'input2="doubleinout1_2.csv"' \
-    -e 'input1="doubleinout1_1.csv"' -e 'output1="doubleinout1.png"' \
-    doubleinout1.gp
+  /usr/bin/gnuplot -e 'output2="doubleinout1_2.png"' \
+    -e 'input2="doubleinout1_2.csv"' -e 'output1="doubleinout1_1.png"' \
+    -e 'input1="doubleinout1_1.csv"' doubleinout1.gp
   os.chdir('#')
 </screen>
 </example>
