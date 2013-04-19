@@ -176,28 +176,28 @@ made available to the gnuplot script in form of predefined variables.  </para>
   <title>How gnuplot is run</title>
 
   <para>By default, <command>gnuplot</command> is started from the directory
-  containing <filename>SConsctruct/SConscript</filename> file invoking the
+  containing <filename>SConstruct/SConscript</filename> file invoking the
   <literal>GplotGraph</literal> builder. Variant directories are respected,
-  and in VariantDir build the <command>gnuplot</command> is invoked from the
-  build dir. </para>
+  and in variant build the <command>gnuplot</command> is invoked from the
+  variant dir. </para>
 
   <para>
-  The default behavior may be changed by altering the <literal>chdir</literal>
+  The default behavior may be changed by altering the <literal>gp_chdir</literal>
   parameter of <literal>GplotGraph</literal> builder. If you need to start
   <command>gnuplot</command> from another directory, pass it via the
-  <literal>chdir</literal>. 
+  <literal>gp_chdir</literal>. 
   <programlisting>
   <![CDATA[ 
-  GplotGraph('foo.png', 'foo.gp', chdir = 'bar/')
+  GplotGraph('foo.png', 'foo.gp', gp_chdir = 'bar/')
   ]]>
   </programlisting>
-  If you pass string as <literal>chdir</literal> it is interpreted as directory
-  name relative to the place where <filename>SConsctruc/SConscript</filename>
+  If you pass string as <literal>gp_chdir</literal> it is interpreted as directory
+  name relative to the place where <filename>SConstruct/SConscript</filename>
   lives (unless the name starts with <literal>#</literal>).
   </para>
 
   <para>
-  You may also set <varname>chdir</varname> explicitly to
+  You may also set <varname>gp_chdir</varname> explicitly to
   <literal>None</literal> or <literal>False</literal> to revert to default
   SCons behavior (running from top-level source directory).
   </para>
@@ -237,13 +237,10 @@ with most advanced ones.
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
+Compiling the example yields 
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#')
-  /usr/bin/gnuplot singleout1.gp
-  os.chdir('#')
+  cd . &amp;&amp; /usr/bin/gnuplot singleout1.gp
 </screen>
 </example>
 </section>
@@ -254,7 +251,7 @@ top level source directory)
 <para>In this example we generate a file named
 <filename>singleout2.png</filename> containing the graph of
 <mathphrase>sin(x)</mathphrase> function. The name of the output file is
-defined in <filename>SConsctruct</filename> (the <link linkend =
+defined in <filename>SConstruct</filename> (the <link linkend =
 "cv-gp_outputs"> <varname>gp_outputs</varname> </link> parameter) and
 passed to gnuplot via command line as a gnuplot variable named
 <varname>output1</varname>.</para>
@@ -279,14 +276,10 @@ passed to gnuplot via command line as a gnuplot variable named
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#')
-  /usr/bin/gnuplot -e 'output1="singleout2.png"' singleout2.gp
-  os.chdir('#')
+  cd . &amp;&amp; /usr/bin/gnuplot -e 'output1="singleout2.png"' singleout2.gp
 </screen>
 </example>
 </section>
@@ -321,14 +314,11 @@ files are hard-coded in <filename>singleinout1.gp</filename> script.</para>
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#')
-  /usr/bin/gnuplot -e 'input1="singleinout1.csv"' singleinout1.gp
-  os.chdir('#')
+  cd . &amp;&amp; /usr/bin/gnuplot -e 'input1="singleinout1.csv"' \
+    singleinout1.gp
 </screen>
 </example>
 </section>
@@ -339,7 +329,7 @@ top level source directory)
 <para>In this example we generate a file named
 <filename>singleinout2.png</filename> containing a graph of numerical data from
 <filename>singleinout2.csv</filename> file. The input and output files are
-defined in <filename>SConsctruct</filename> (the <link linkend =
+defined in <filename>SConstruct</filename> (the <link linkend =
 "cv-gp_inputs"> <varname>gp_inputs</varname> </link> and <link linkend =
 "cv-gp_outputs"> <varname>gp_outputs</varname> </link> parameters) and are
 passed to gnuplot via command line as a gnuplot variables named
@@ -367,15 +357,11 @@ passed to gnuplot via command line as a gnuplot variables named
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#')
-  /usr/bin/gnuplot -e 'output1="singleinout2.png"' \
+  cd . &amp;&amp; /usr/bin/gnuplot -e 'output1="singleinout2.png"' \
     -e 'input1="singleinout2.csv"' singleinout2.gp
-  os.chdir('#')
 </screen>
 </example>
 </section>
@@ -413,16 +399,12 @@ are passed to <filename>doublein1.gp</filename> script via command line.</para>
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields 
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#')
-  /usr/bin/gnuplot -e 'input2="doublein1_2.csv"' \
+  cd . &amp;&amp; /usr/bin/gnuplot -e 'input2="doublein1_2.csv"' \
     -e 'output1="doublein1.png"' \
     -e 'input1="doublein1_1.csv"' doublein1.gp
-  os.chdir('#')
 </screen>
 </example>
 </section>
@@ -465,16 +447,13 @@ command line.</para>
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#')
-  /usr/bin/gnuplot -e 'output2="doubleinout1_2.png"' \
-    -e 'input2="doubleinout1_2.csv"' -e 'output1="doubleinout1_1.png"' \
+  cd . &amp;&amp; /usr/bin/gnuplot -e 'output2="doubleinout1_2.png"' \
+    -e 'input2="doubleinout1_2.csv"' \
+    -e 'output1="doubleinout1_1.png"' \
     -e 'input1="doubleinout1_1.csv"' doubleinout1.gp
-  os.chdir('#')
 </screen>
 </example>
 </section>
@@ -524,17 +503,13 @@ gnuplot scripts named <filename>multiscript1_1.gp</filename> and
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#')
-  /usr/bin/gnuplot -e 'output2="multiscript1_2.png"' \
+  cd . &amp;&amp; /usr/bin/gnuplot -e 'output2="multiscript1_2.png"' \
     -e 'output1="multiscript1_1.png"' \
     -e 'input1="multiscript1.csv"' \
     multiscript1_1.gp multiscript1_2.gp
-  os.chdir('#')
 </screen>
 </example>
 </section>
@@ -578,17 +553,13 @@ command line variables. The names of these variables are controlled by defining
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields 
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#')
-  /usr/bin/gnuplot -e 'first_in="namedinout1_1.csv"' \
+  cd . &amp;&amp; /usr/bin/gnuplot -e 'first_in="namedinout1_1.csv"' \
     -e 'second_out="namedinout1_2.png"' \
     -e 'first_out="namedinout1_1.png"' \
     -e 'second_in="namedinout1_2.csv"' namedinout1.gp
-  os.chdir('#')
 </screen>
 </example>
 </section>
@@ -634,22 +605,18 @@ named <filename>build</filename> is the variant build directory.</para>
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#/build')
-  /usr/bin/gnuplot -e 'output1="variant1.png"' \
+  cd build &amp;&amp; /usr/bin/gnuplot -e 'output1="variant1.png"' \
     -e 'input1="../src/variant1.csv"' ../src/variant1.gp
-  os.chdir('#')
 </screen>
 </example>
 </section>
 
-<section><title>Changing working directory with chdir.</title>
+<section><title>Changing working directory with gp_chdir.</title>
 <!-- chdir1 -->
-<example><title>Changing working directory with chdir.</title>
+<example><title>Changing working directory with gp_chdir.</title>
 <para>In this example we generate a file <filename>out/chdir1.png</filename>
 containing a graph of numerical data from file <filename>in/chdir1.csv</filename>.
 The gnuplot script is <filename>./chdir1.gp</filename> and is stored in same
@@ -675,19 +642,15 @@ the <filename>out</filename> subdirectory.</para>
   env.GplotGraph( 'chdir1.gp',
       gp_outputs = ['out/chdir1.png'],
       gp_inputs =  ['in/chdir1.csv'],
-      chdir='out') 
+      gp_chdir='out') 
   ]]>
   </programlisting>
 </para>
-Compiling the example yields (note, <literal>#</literal> is a placeholder for
-top level source directory)
-
+Compiling the example yields 
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  os.chdir('#/out')
-  /usr/bin/gnuplot -e 'output1="chdir1.png"' \
+  cd out &amp;&amp; /usr/bin/gnuplot -e 'output1="chdir1.png"' \
     -e 'input1="../in/chdir1.csv"' ../chdir1.gp
-  os.chdir('#')
 </screen>
 </example>
 </section>
@@ -858,16 +821,16 @@ following arguments that may need some explanation.</para>
 <variablelist><title>Builder arguments</title>
   
   <!-- gp_inputs -->
-  <varlistentry id="cv-chdir"> 
-    <term> <varname>chdir</varname> </term>
+  <varlistentry id="cv-gp_chdir"> 
+    <term> <varname>gp_chdir</varname> </term>
     <listitem>
     <para><emphasis>Default value:</emphasis> <literal>1</literal> </para>
     <para>Set current working directory for <command>gnuplot</command> command.
     By default, the working directory is changed to the directory of the
     <filename>SConscript</filename> file from which the builder is invoked. If
-    you set <varname>chdir</varname> to string, it is interpreted as a path
+    you set <varname>gp_chdir</varname> to string, it is interpreted as a path
     relative to the calling <filename>SConscript</filename>. Setting
-    <varname>chdir</varname> to <literal>None/False</literal> or such, reverts
+    <varname>gp_chdir</varname> to <literal>None/False</literal> or such, reverts
     to SCons default behavior.
     </para></listitem>
   </varlistentry>

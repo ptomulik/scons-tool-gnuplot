@@ -28,6 +28,8 @@ __docformat__ = "restructuredText"
 
 import SCons.Builder
 
+_null = SCons.Builder._null
+
 class _GplotRelTo(object):
     """Given a sequence of ``nodes`` return their paths relative to predefined
     ``base``.
@@ -243,23 +245,27 @@ class _GplotBuilderObject (SCons.Builder.BuilderBase):
         sup = super(_GplotBuilderObject, self)
         return sup._execute(env, target, source, *args)
 
-    def __call__(self, env, target=None, source=None, chdir=1, **kw):
+    def __call__(self, env, target=None, source=None, chdir=_null, **kw):
         import SCons.Node.FS
 
         # - by default change dir to the directory of calling SCons script,
-        # - if chdir is a string, interpret it as a path relative to the
+        # - if gp_chdir is a string, interpret it as a path relative to the
         #   calling SCons script,
-        # - if chdir is None/False, revert SCons default behavior: run the
+        # - if gp_chdir is None/False, revert SCons default behavior: run the
         #   command from the directory of the top level SConstruct.
-        if chdir:
-            if not isinstance(chdir, SCons.Node.FS.Base):
+        try: gp_chdir = kw['gp_chdir']
+        except KeyError: gp_chdir = True # do chdir by default
+
+        # I'think here is the place to convert gp_chdir to node,
+        if gp_chdir:
+            if SCons.Util.is_String(gp_chdir):
+                kw['_gp_chdir'] = env.Dir(gp_chdir)
+            elif not isinstance(gp_chdir, SCons.Node.FS.Base):
                 # this is our default behavior
-                chdir = env.fs.getcwd()
-            elif SCons.Util.is_String(chdir):
-                chdir = env.Dir(chdir, env.fs.getcwd())
-            kw['_gp_chdir'] = chdir
+                kw['_gp_chdir'] = env.fs.getcwd()
+            else:
+                kw['_gp_chdir'] = gp_chdir
         else:
-            chdir = SCons.Builder._null
             kw['_gp_chdir'] = env.Dir('#') 
        
         if target is None: target = []
@@ -286,14 +292,14 @@ def generate(env):
     if not gnuplot: gnuplot = 'gnuplot'
     env['GNUPLOT'] = gnuplot
 
-    fvars   = '$( ${_concat( "%s " % GPLOTVARPREFIX, ' \
-            + '_GplotFvars( _gp_fdict, _gp_chdir), ' \
-            + 'GPLOTVARSUFFIX, __env__ )} $)'
+    fvars = '$( ${_concat( "%s " % GPLOTVARPREFIX, ' \
+          + '_GplotFvars( _gp_fdict, _gp_chdir), ' \
+          + 'GPLOTVARSUFFIX, __env__ )} $)'
 
-    srcs    = '$( ${_concat( "", SOURCES, "", __env__, ' \
-            + '_GplotRelTo(_gp_chdir))} $)'
+    srcs  = '$( ${_concat( "", SOURCES, "", __env__, ' \
+          + '_GplotRelTo(_gp_chdir))} $)'
 
-    gnuplotcom  = '$GNUPLOT $GNUPLOTFLAGS %s %s' % (fvars, srcs)
+    com   = 'cd $_gp_chdir && $GNUPLOT $GNUPLOTFLAGS %s %s' % (fvars, srcs)
     env.SetDefault( GPLOTSUFFIX     = '.gp',
                     GPLOTINVAR      = 'input',
                     GPLOTOUTVAR     = 'output',
@@ -302,7 +308,7 @@ def generate(env):
                     GPLOTVARSUFFIX  = "",
                     _GplotFvars     = _GplotFvars,
                     _GplotRelTo     = _GplotRelTo,
-                    GNUPLOTCOM      = gnuplotcom,
+                    GNUPLOTCOM      = com,
                     GNUPLOTCOMSTR   = '')
     try:
         env['BUILDER']['GplotGraph']

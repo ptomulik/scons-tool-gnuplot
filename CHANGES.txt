@@ -1,0 +1,11 @@
+CURRENT
+ - Revised user manual and tests to reflect the interface change (chdir ->
+   gp_chdir) - see below. 
+ - Fixed possible bug, where the usage of SCons built-in chdir parameter could
+   broke parallel builds (the -j flags). We now use our own 'gp_chdir' keyword
+   parameter instead of SCons built-in 'chdir' parameter.
+RELEASE 0.2a - Mon, 15 Apr 2013
+ - Revised user manual
+ - GplotGraph converted from pseudo-builder to true builder
+RELEASE 0.1a - Sat, 13 Apr 2013
+ - Initial release.

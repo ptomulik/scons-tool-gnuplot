@@ -24,7 +24,7 @@ Import('env')
 env.GplotGraph( 'chdir2.gp',
     gp_outputs = ['out/chdir2.png'],
     gp_inputs =  ['in/chdir2.csv'],
-    chdir='#sub/out') 
+    gp_chdir = '#sub/out') 
 
 
 # Local Variables:
