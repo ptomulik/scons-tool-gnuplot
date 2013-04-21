@@ -209,24 +209,20 @@ def _GplotEmitter(target, source, env):
     scanner (see `_GplotScanner()`).
     """
 
-    outnodes = []
-    try: outputs = env['gp_outputs']
-    except KeyError: pass
-    else: outnodes.extend( _gplot_arg2nodes(env, outputs) )
-
-    try: outputs = env['gp_extoutputs']
-    except KeyError: pass
-    else: outnodes.extend(_gplot_arg2nodes(env, outputs))
-
     # scan source files for outpus
-    outnodes2 = _gplot_scan_for_outputs(env, env['_gp_chdir'], source)
-    for node in outnodes: 
-        if node in outnodes2:
-            outnodes2.remove(node)
-    for node in target: 
-        if node in outnodes2:
-            outnodes2.remove(node)
-    outnodes.extend(outnodes2)
+    outnodes = _gplot_scan_for_outputs(env, env['_gp_chdir'], source)
+
+    try: outputs2 = env['gp_outputs']
+    except KeyError: pass
+    else: 
+        outnodes2 =  _gplot_arg2nodes(env, outputs2)
+        outnodes.extend([n for n in outnodes2 if n not in outnodes])
+
+    try: outputs2 = env['gp_extoutputs']
+    except KeyError: pass
+    else:
+        outnodes2 =  _gplot_arg2nodes(env, outputs2)
+        outnodes.extend([n for n in outnodes2 if n not in outnodes])
 
     return  target + outnodes, source 
 

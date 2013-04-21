@@ -1,4 +1,6 @@
 CURRENT
+ - Fixed bug with incorrect order of targets returned by emitter (github issue
+   #2).
  - Revised user manual and tests to reflect the interface change (chdir ->
    gp_chdir) - see below. 
  - Fixed possible bug, where the usage of SCons built-in chdir parameter could
