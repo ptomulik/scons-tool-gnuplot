@@ -1,4 +1,4 @@
-CURRENT
+RELEASE 0.3a - Tue, 23 Apr 2013
  - Fixed bug with incorrect order of targets returned by emitter (github issue
    #2).
  - Revised user manual and tests to reflect the interface change (chdir ->
