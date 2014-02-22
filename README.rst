@@ -29,7 +29,8 @@ automatize the download process, and they require the following software
 TO RUN TESTS
 ^^^^^^^^^^^^
 
-  - scons_test_framework_ by Dirk Baechle, 
+  - scons_ test framework, that is ``QMTest`` directory and ``runtests.py``
+    script,
 
 TO GENERATE API DOCUMENTATION
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,11 +81,9 @@ about deleting them before doing commits.
 TESTING FRAMEWORK
 `````````````````
 
-If you wish to run end-to-end tests for this tool, download the testing
-framework for scons extensions/tools (currently from Dirk Baechle's repository
-scons_test_framework_ hosted on bitbucket.org). The following files/directories
-need to be downloaded (and placed as shown in table relative to the top-level
-source directory)
+If you wish to run end-to-end tests for this tool, you need the scons_ testing
+framework. The following files/directories need to be downloaded (and placed as
+shown in table relative to the top-level source directory)
 
  ========================= ==================================================
   source file/directory                   target file/directory
@@ -95,13 +94,14 @@ source directory)
  ========================= ==================================================
 
 On GNU system you may use the ``bin/download-test-framework.sh``  script to
-download the testing framework (requires ``hg`` to be installed on your system)::
+download the above files (requires ``hg`` to be installed on your system)::
 
     bin/download-test-framework.sh
 
-This script downloads and copies to the top-level directory the ``QMTest``
-package and ``runtest.py`` script from the repository. The test framework may
-be later removed with the ``bin/delete-test-framework.sh`` script::
+This script clones the scons repository to a temporary directory and copies the
+``QMTest`` subdirectory and ``runtest.py`` script from the repository to the
+local source tree. The test framework may be later removed with the
+``bin/delete-test-framework.sh`` script::
 
     bin/delete-test-framework.sh
 
@@ -192,8 +192,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE
 
-.. _scons: http://scons.org
-.. _scons_test_framework: https://bitbucket.org/dirkbaechle/scons_test_framework
+.. _scons: https://bitbucket.org/scons/scons
 .. _mercurial: http://mercurial.selenic.com/
 .. _epydoc: http://epydoc.sourceforge.net/
 .. _python-docutils: http://pypi.python.org/pypi/docutils
