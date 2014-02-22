@@ -31,17 +31,16 @@ echo '** Downloading SCons docbook tool **'
 TOPDIR=$(readlink -f "$(dirname $0)/..")
 TOOLDIR="$TOPDIR/site_scons/site_tools/docbook"
 TMPDIR=$(mktemp -d)
-REPOBASE="ssh://hg@bitbucket.org/dirkbaechle"
-REPODIR="scons_docbook"
+URL='https://bitbucket.org/dirkbaechle/scons_docbook/get/default.tar.gz'
 
 test -z "$TMPDIR" && { echo "Failed to create temp directory" >&2 ; exit 1; }
 test -d "$TMPDIR" || { echo "'$TMPDIR' is not a directory" >&2 ; exit 1; }
 
 test -x "$TOOLDIR" || mkdir -p "$TOOLDIR"
 
-(cd $TMPDIR && hg clone "$REPOBASE/$REPODIR" && \
- cp "$REPODIR/__init__.py" "$TOOLDIR" && cp -r "$REPODIR/utils" "$TOOLDIR" && \
- cp -r $REPODIR/docbook-xsl-*/ "$TOOLDIR" )
+(cd $TMPDIR && curl "$URL" | tar -zxf - --wildcards --strip-components=1 && \
+ cp "__init__.py" "$TOOLDIR" && cp -r "utils" "$TOOLDIR" && \
+ cp -r docbook-xsl-*/ "$TOOLDIR" )
 
 rm -rf "$TMPDIR"
 

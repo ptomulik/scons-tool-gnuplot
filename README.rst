@@ -24,7 +24,7 @@ Sometimes it may be necessary to download files from other people's repositories
 for example test framework is necessary to run tests. We have some scripts to
 automatize the download process, and they require the following software
 
-  - mercurial_ VCS (``hg``) 
+  - curl_ program
 
 TO RUN TESTS
 ^^^^^^^^^^^^
@@ -94,7 +94,7 @@ shown in table relative to the top-level source directory)
  ========================= ==================================================
 
 On GNU system you may use the ``bin/download-test-framework.sh``  script to
-download the above files (requires ``hg`` to be installed on your system)::
+download the above files (requires curl_ to be installed on your system)::
 
     bin/download-test-framework.sh
 
@@ -127,7 +127,7 @@ placed as shown in table relative to the top-level source directory)
  ========================= =====================================================
 
 On GNU system you may use the ``bin/download-docbook-tool.sh``  script to
-download the docbook tool (requires ``hg`` to be installed on your system)::
+download the docbook tool (requires curl_ to be installed on your system)::
 
     bin/download-docbook-tool.sh
 
@@ -192,8 +192,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE
 
+.. _curl: http://curl.haxx.se/
 .. _scons: https://bitbucket.org/scons/scons
-.. _mercurial: http://mercurial.selenic.com/
 .. _epydoc: http://epydoc.sourceforge.net/
 .. _python-docutils: http://pypi.python.org/pypi/docutils
 .. _python-pygments: http://pygments.org/

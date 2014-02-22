@@ -30,14 +30,13 @@ echo '** Downloading SCons test framework **'
 
 TOPDIR=$(readlink -f "$(dirname $0)/..")
 TMPDIR=$(mktemp -d)
-REPOBASE="ssh://hg@bitbucket.org/scons"
-REPODIR="scons"
+URL='https://bitbucket.org/scons/scons/get/default.tar.gz'
 
 test -z "$TMPDIR" && { echo "Failed to create temp directory" >&2 ; exit 1; }
 test -d "$TMPDIR" || { echo "'$TMPDIR' is not a directory" >&2 ; exit 1; }
 
-(cd $TMPDIR && hg clone "$REPOBASE/$REPODIR" && \
- cp -r "$REPODIR/QMTest" "$TOPDIR" && cp "$REPODIR/runtest.py" "$TOPDIR")
+(cd $TMPDIR && curl "$URL" | tar -xzf - --wildcards --strip-components=1 && \
+ cp -r 'QMTest' "$TOPDIR" && cp 'runtest.py' "$TOPDIR")
 
 rm -rf "$TMPDIR"
 
