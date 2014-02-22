@@ -142,7 +142,7 @@ RUNNING TESTS
 
 To run all the tests type::
   
-    python runtest.py -a
+    SCONS_EXTERNAL_TEST=1 python runtest.py -a
 
 This requires the presence of the testing framework in the development tree.
 

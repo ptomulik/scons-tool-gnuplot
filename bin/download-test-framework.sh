@@ -30,8 +30,8 @@ echo '** Downloading SCons test framework **'
 
 TOPDIR=$(readlink -f "$(dirname $0)/..")
 TMPDIR=$(mktemp -d)
-REPOBASE="ssh://hg@bitbucket.org/dirkbaechle"
-REPODIR="scons_test_framework"
+REPOBASE="ssh://hg@bitbucket.org/scons"
+REPODIR="scons"
 
 test -z "$TMPDIR" && { echo "Failed to create temp directory" >&2 ; exit 1; }
 test -d "$TMPDIR" || { echo "'$TMPDIR' is not a directory" >&2 ; exit 1; }
