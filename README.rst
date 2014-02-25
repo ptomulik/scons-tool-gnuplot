@@ -1,7 +1,8 @@
 scons-tool-gnuplot
 ==================
 
-Gnuplot tool for scons_.
+Gnuplot tool for scons_. For tarball and documentation see `project page at
+sourceforge.net`_.
 
 INSTALLATION
 ------------
@@ -200,3 +201,5 @@ SOFTWARE
 .. _docbook-xml: http://www.oasis-open.org/docbook/xml/
 .. _xsltproc: http://xmlsoft.org/libxslt/
 .. _scons docbook tool: https://bitbucket.org/dirkbaechle/scons_docbook/
+.. _project page at sourceforge.net: http://sourceforge.net/projects/scons-gnuplot/
+
