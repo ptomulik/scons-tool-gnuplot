@@ -1,3 +1,4 @@
+ - fix typo 'BUILDER' -> 'BUILDERS' in gnuplot/__init__.py
 RELEASE 0.4a - Sat, 22 Feb 2014
  - Use curl instead of hg to download dependencies.
  - Download testing framework from main scons repository. The dirkbachle's one

@@ -307,7 +307,7 @@ def generate(env):
                     GNUPLOTCOM      = com,
                     GNUPLOTCOMSTR   = '')
     try:
-        env['BUILDER']['GplotGraph']
+        env['BUILDERS']['GplotGraph']
     except KeyError:
         scanner = SCons.Script.Scanner( function = _GplotScanner, argument = None )
         builder = _GplotBuilder( action = '$GNUPLOTCOM',
