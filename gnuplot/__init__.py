@@ -59,12 +59,20 @@ def _GplotFvars(fdict, base):
 
     **Returns**
 
-        a list of ``'variable="path"'`` strings, the ``variable`` s are keys
+        a list of ``\"variable=\'path\'\"`` strings, the ``variable``s are keys
         from ``fdict`` and ``path``s are file names relative to ``base``
     """
     import SCons.Util
+    import SCons.Platform
+
+    platform = SCons.Platform.Platform()
+    if str(platform) ==  'win32':
+        sq = "'"
+    else:
+        sq = "'"
+
     if not fdict: return []
-    return [ "'%s=\"%s\"'" % (k, base.rel_path(v)) for k,v in fdict.items() ]
+    return [ "\"%s=%s\"" % (k, sq+base.rel_path(v)+sq) for k,v in fdict.items() ]
 
 
 def _gplot_arg2nodes(env, args, *args2, **kw):

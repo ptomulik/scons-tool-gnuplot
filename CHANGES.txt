@@ -1,3 +1,4 @@
+ - fix quoting variables passed to gnuplot (win32)
 RELEASE 0.5a - Thu, 15 Dec 2016
  - use Detect() instead of WhereIs() to detect gnuplot
  - fix typo 'BUILDER' -> 'BUILDERS' in gnuplot/__init__.py
