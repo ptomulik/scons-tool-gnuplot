@@ -27,6 +27,8 @@ Tool specific initialization for gnuplot.
 __docformat__ = "restructuredText"
 
 import SCons.Builder
+import SCons.Util
+import platform
 
 _null = SCons.Builder._null
 
@@ -41,7 +43,6 @@ class _GplotRelTo(object):
 
             - *base* - scons filesystem node representing base file or dir,
         """
-        import SCons.Util
         self.base = base
 
     def __call__(self, nodes, *args, **kw):
@@ -62,17 +63,8 @@ def _GplotFvars(fdict, base):
         a list of ``\"variable=\'path\'\"`` strings, the ``variable``s are keys
         from ``fdict`` and ``path``s are file names relative to ``base``
     """
-    import SCons.Util
-    import SCons.Platform
-
-    platform = SCons.Platform.Platform()
-    if str(platform) ==  'win32':
-        sq = "'"
-    else:
-        sq = "'"
-
     if not fdict: return []
-    return [ "\"%s=%s\"" % (k, sq+base.rel_path(v)+sq) for k,v in fdict.items() ]
+    return [ "\"%s='%s'\"" % (k, base.rel_path(v)) for k,v in fdict.items() ]
 
 
 def _gplot_arg2nodes(env, args, *args2, **kw):
@@ -92,7 +84,6 @@ def _gplot_arg2nodes(env, args, *args2, **kw):
 
         returns list of nodes.
     """
-    import SCons.Util
     if SCons.Util.is_Dict(args):
         return env.arg2nodes(args.values(), *args2, **kw)
     else:
@@ -113,7 +104,6 @@ def _gplot_arg2nodes_dict(env, args, name = None, *args2, **kw):
 
         dictionary of type ``{ 'key' : node }``,
     """
-    import SCons.Util
     if SCons.Util.is_Dict(args):
         keys = args.keys()
         vals = args.values()
@@ -294,6 +284,11 @@ def generate(env):
     except KeyError:
         env['GNUPLOT'] = env.Detect(gnuplots) or gnuplots[0]
 
+    if platform.system() == 'Windows':
+        cdflags = SCons.Util.CLVar('/D')
+    else:
+        cdflags = SCons.Util.CLVar()
+
     fvars = '$( ${_concat( "%s " % GPLOTVARPREFIX, ' \
           + '_GplotFvars( _gp_fdict, _gp_chdir), ' \
           + 'GPLOTVARSUFFIX, __env__ )} $)'
@@ -301,8 +296,9 @@ def generate(env):
     srcs  = '$( ${_concat( "", SOURCES, "", __env__, ' \
           + '_GplotRelTo(_gp_chdir))} $)'
 
-    com   = 'cd $_gp_chdir && $GNUPLOT $GNUPLOTFLAGS %s %s' % (fvars, srcs)
-    env.SetDefault( GPLOTSUFFIX     = '.gp',
+    com   = 'cd $GPLOTCDFLAGS $_gp_chdir && $GNUPLOT $GNUPLOTFLAGS %s %s' % (fvars, srcs)
+    env.SetDefault( GPLOTCDFLAGS    = cdflags,
+                    GPLOTSUFFIX     = '.gp',
                     GPLOTINVAR      = 'input',
                     GPLOTOUTVAR     = 'output',
                     GPLOTEOUTVAR    = 'eoutput',
