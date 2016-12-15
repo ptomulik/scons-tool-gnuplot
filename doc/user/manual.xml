@@ -240,7 +240,7 @@ with most advanced ones.
 Compiling the example yields 
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd . &amp;&amp; /usr/bin/gnuplot singleout1.gp
+  cd . &amp;&amp; gnuplot singleout1.gp
 </screen>
 </example>
 </section>
@@ -279,7 +279,7 @@ passed to gnuplot via command line as a gnuplot variable named
 Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd . &amp;&amp; /usr/bin/gnuplot -e 'output1="singleout2.png"' singleout2.gp
+  cd . &amp;&amp; gnuplot -e 'output1="singleout2.png"' singleout2.gp
 </screen>
 </example>
 </section>
@@ -317,7 +317,7 @@ files are hard-coded in <filename>singleinout1.gp</filename> script.</para>
 Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd . &amp;&amp; /usr/bin/gnuplot -e 'input1="singleinout1.csv"' \
+  cd . &amp;&amp; gnuplot -e 'input1="singleinout1.csv"' \
     singleinout1.gp
 </screen>
 </example>
@@ -360,7 +360,7 @@ passed to gnuplot via command line as a gnuplot variables named
 Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd . &amp;&amp; /usr/bin/gnuplot -e 'output1="singleinout2.png"' \
+  cd . &amp;&amp; gnuplot -e 'output1="singleinout2.png"' \
     -e 'input1="singleinout2.csv"' singleinout2.gp
 </screen>
 </example>
@@ -402,7 +402,7 @@ are passed to <filename>doublein1.gp</filename> script via command line.</para>
 Compiling the example yields 
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd . &amp;&amp; /usr/bin/gnuplot -e 'input2="doublein1_2.csv"' \
+  cd . &amp;&amp; gnuplot -e 'input2="doublein1_2.csv"' \
     -e 'output1="doublein1.png"' \
     -e 'input1="doublein1_1.csv"' doublein1.gp
 </screen>
@@ -450,7 +450,7 @@ command line.</para>
 Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd . &amp;&amp; /usr/bin/gnuplot -e 'output2="doubleinout1_2.png"' \
+  cd . &amp;&amp; gnuplot -e 'output2="doubleinout1_2.png"' \
     -e 'input2="doubleinout1_2.csv"' \
     -e 'output1="doubleinout1_1.png"' \
     -e 'input1="doubleinout1_1.csv"' doubleinout1.gp
@@ -506,7 +506,7 @@ gnuplot scripts named <filename>multiscript1_1.gp</filename> and
 Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd . &amp;&amp; /usr/bin/gnuplot -e 'output2="multiscript1_2.png"' \
+  cd . &amp;&amp; gnuplot -e 'output2="multiscript1_2.png"' \
     -e 'output1="multiscript1_1.png"' \
     -e 'input1="multiscript1.csv"' \
     multiscript1_1.gp multiscript1_2.gp
@@ -556,7 +556,7 @@ command line variables. The names of these variables are controlled by defining
 Compiling the example yields 
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd . &amp;&amp; /usr/bin/gnuplot -e 'first_in="namedinout1_1.csv"' \
+  cd . &amp;&amp; gnuplot -e 'first_in="namedinout1_1.csv"' \
     -e 'second_out="namedinout1_2.png"' \
     -e 'first_out="namedinout1_1.png"' \
     -e 'second_in="namedinout1_2.csv"' namedinout1.gp
@@ -608,7 +608,7 @@ named <filename>build</filename> is the variant build directory.</para>
 Compiling the example yields
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd build &amp;&amp; /usr/bin/gnuplot -e 'output1="variant1.png"' \
+  cd build &amp;&amp; gnuplot -e 'output1="variant1.png"' \
     -e 'input1="../src/variant1.csv"' ../src/variant1.gp
 </screen>
 </example>
@@ -649,7 +649,7 @@ the <filename>out</filename> subdirectory.</para>
 Compiling the example yields 
 <screen>
   <prompt>ptomulik@barakus:$</prompt> <userinput>scons -Q</userinput>
-  cd out &amp;&amp; /usr/bin/gnuplot -e 'output1="chdir1.png"' \
+  cd out &amp;&amp; gnuplot -e 'output1="chdir1.png"' \
     -e 'input1="../in/chdir1.csv"' ../chdir1.gp
 </screen>
 </example>
