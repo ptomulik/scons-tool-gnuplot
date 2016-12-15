@@ -74,7 +74,7 @@ The development tree may be later cleaned-up from the downloaded files by::
 Particular projects, that this project depends on, are mentioned in the
 following subsections. You may look through it if the above scripts do not
 work well on your platform. Otherwise, all of the following dependencies
-are handled by ``download-deps.sh`` and ``delete-deps.sh`` scripts.  
+are handled by ``download-deps.sh`` and ``delete-deps.sh`` scripts.
 
 All downloaded files are ignored by ``.gitignore``, so you don't have to worry
 about deleting them before doing commits.
@@ -142,7 +142,7 @@ RUNNING TESTS
 -------------
 
 To run all the tests type::
-  
+
     SCONS_EXTERNAL_TEST=1 python runtest.py -a
 
 This requires the presence of the testing framework in the development tree.

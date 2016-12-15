@@ -7,7 +7,7 @@ RELEASE 0.3a - Tue, 23 Apr 2013
  - Fixed bug with incorrect order of targets returned by emitter (github issue
    #2).
  - Revised user manual and tests to reflect the interface change (chdir ->
-   gp_chdir) - see below. 
+   gp_chdir) - see below.
  - Fixed possible bug, where the usage of SCons built-in chdir parameter could
    broke parallel builds (the -j flags). We now use our own 'gp_chdir' keyword
    parameter instead of SCons built-in 'chdir' parameter.

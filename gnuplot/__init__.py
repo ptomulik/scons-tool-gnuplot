@@ -5,17 +5,17 @@ Tool specific initialization for gnuplot.
 
 #
 # Copyright (c) 2013 by Pawel Tomulik
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,7 +36,7 @@ class _GplotRelTo(object):
     """
     def __init__(self, base):
         """Initializes the functional object
-        
+
         **Arguments**
 
             - *base* - scons filesystem node representing base file or dir,
@@ -48,12 +48,12 @@ class _GplotRelTo(object):
         """Given a sequence of ``nodes`` return list of their paths relative to
            ``self.base``."""
         return [ self.base.rel_path(node) for node in nodes ]
-   
+
 def _GplotFvars(fdict, base):
     """Prepare list of gnuplot variables contaning file names.
 
     **Arguments**
-        
+
         - *fdict* - dictionary with files (nodes) as returned by ``_gplot_fdict()``,
         - *base* - base directory (node),
 
@@ -69,10 +69,10 @@ def _GplotFvars(fdict, base):
 
 def _gplot_arg2nodes(env, args, *args2, **kw):
     """Helper function. Convert arguments to a list of nodes.
-    
+
     This function works similarly to ``env.arg2nodes()`` except it handles
     also dictionaries.
-    
+
     **Arguments**
 
         - *env*   - SCons Environment object,
@@ -81,7 +81,7 @@ def _gplot_arg2nodes(env, args, *args2, **kw):
         - *kw*    - keyword arguments (passed to ``env.arg2nodes()``).
 
     **Return**
-        
+
         returns list of nodes.
     """
     import SCons.Util
@@ -102,7 +102,7 @@ def _gplot_arg2nodes_dict(env, args, name = None, *args2, **kw):
         - *kw*    - keyword arguments (passed to ``env.arg2nodes()``).
 
     **Returns**
-        
+
         dictionary of type ``{ 'key' : node }``,
     """
     import SCons.Util
@@ -127,13 +127,13 @@ def _gplot_fdict(env):
 
         Constuction variables ``$gp_inputs``, ``$gp_outputs``,
         and ``$gp_extoutputs`` are processed to create the specific dictionary.
-       
+
         **Arguments**
 
             - *env* - SCons Environment object,
 
         **Returns**
-            
+
             returns a ``{ 'name' : 'value' }`` dict where 'name's are
             gnuplot variable names and 'value's are corresponding values,
 
@@ -165,13 +165,13 @@ def _gplot_scan_for_outputs(env, base, source):
     """Helper function. Scan source files for 'set output' gnuplot commands.
 
     **Arguments**
-        
+
         - *env* - the scons Environment object,
         - *base* - base directory (node) for the file names obtained from source,
         - *source* - list of source nodes to be scanned.
 
     **Return**
-        
+
         list of output files (as nodes) extracted from the source files
     """
     import re
@@ -190,7 +190,7 @@ def _gplot_scan_for_outputs(env, base, source):
 
 def _GplotScanner(node, env, path, arg):
     """Scan gnuplot script for implicit dependencies.
-    
+
     This scanner also handles the ``gp_inputs`` parameter.
     """
     deps = []
@@ -214,7 +214,7 @@ def _GplotEmitter(target, source, env):
 
     try: outputs2 = env['gp_outputs']
     except KeyError: pass
-    else: 
+    else:
         outnodes2 =  _gplot_arg2nodes(env, outputs2)
         outnodes.extend([n for n in outnodes2 if n not in outnodes])
 
@@ -224,15 +224,15 @@ def _GplotEmitter(target, source, env):
         outnodes2 =  _gplot_arg2nodes(env, outputs2)
         outnodes.extend([n for n in outnodes2 if n not in outnodes])
 
-    return  target + outnodes, source 
+    return  target + outnodes, source
 
 class _GplotBuilderObject (SCons.Builder.BuilderBase):
-    """Gnuplot builder object"""    
+    """Gnuplot builder object"""
 
     def _execute(self, env, target, source, *args):
 
         # Prepare our environment override a little bit
-        
+
         try: inputs = env['gp_inputs']
         except KeyError: pass
         else: env['_gp_input_nodes'] = _gplot_arg2nodes(env, inputs)
@@ -262,8 +262,8 @@ class _GplotBuilderObject (SCons.Builder.BuilderBase):
             else:
                 kw['_gp_chdir'] = gp_chdir
         else:
-            kw['_gp_chdir'] = env.Dir('#') 
-       
+            kw['_gp_chdir'] = env.Dir('#')
+
         if target is None: target = []
 
         sup = super(_GplotBuilderObject, self)
@@ -272,7 +272,7 @@ class _GplotBuilderObject (SCons.Builder.BuilderBase):
 def _GplotBuilder(**kw):
     """A factory for gnuplot builder objects"""
     if 'action' in kw:
-        kw['action'] = SCons.Action.Action(kw['action']) 
+        kw['action'] = SCons.Action.Action(kw['action'])
     return _GplotBuilderObject(**kw)
 
 def _detect_gnuplot(env):
