@@ -1,3 +1,4 @@
+RELEASE 0.6a - Thu, 15 Dec 2016
  - use "cd /D ..." on Windows
  - fix quoting variables passed to gnuplot (win32)
 RELEASE 0.5a - Thu, 15 Dec 2016
