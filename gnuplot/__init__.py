@@ -275,18 +275,16 @@ def _GplotBuilder(**kw):
         kw['action'] = SCons.Action.Action(kw['action'])
     return _GplotBuilderObject(**kw)
 
-def _detect_gnuplot(env):
-    if env.has_key('GNUPLOT'):
-        return env['GNUPLOT']
-    return env.WhereIs('gnuplot')
+gnuplots = [ 'gnuplot' ]
 
 def generate(env):
     """Add Builders and construction variables to the Environment"""
     import SCons.Builder, SCons.Script
 
-    gnuplot = _detect_gnuplot(env)
-    if not gnuplot: gnuplot = 'gnuplot'
-    env['GNUPLOT'] = gnuplot
+    try:
+        env['GNUPLOT']
+    except KeyError:
+        env['GNUPLOT'] = env.Detect(gnuplots) or gnuplots[0]
 
     fvars = '$( ${_concat( "%s " % GPLOTVARPREFIX, ' \
           + '_GplotFvars( _gp_fdict, _gp_chdir), ' \
@@ -317,7 +315,7 @@ def generate(env):
         env.Append( BUILDERS = { 'GplotGraph' : builder } )
 
 def exists(env):
-    return _detect_gnuplot(env)
+    return env.Detect(env.get('GNUPLOT', gnuplots))
 
 # Local Variables:
 # # tab-width:4
