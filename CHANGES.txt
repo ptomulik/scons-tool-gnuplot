@@ -1,3 +1,4 @@
+RELEASE 0.5a - Thu, 15 Dec 2016
  - use Detect() instead of WhereIs() to detect gnuplot
  - fix typo 'BUILDER' -> 'BUILDERS' in gnuplot/__init__.py
 RELEASE 0.4a - Sat, 22 Feb 2014
