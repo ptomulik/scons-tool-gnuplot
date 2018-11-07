@@ -1,15 +1,78 @@
 scons-tool-gnuplot
 ==================
 
+.. image:: https://badge.fury.io/py/scons-tool-gnuplot.svg
+    :target: https://badge.fury.io/py/scons-tool-gnuplot
+    :alt: PyPi package version
+
+.. image:: https://travis-ci.org/ptomulik/scons-tool-gnuplot.svg?branch=master
+    :target: https://travis-ci.org/ptomulik/scons-tool-gnuplot
+    :alt: Travis CI build status
+
+.. image:: https://ci.appveyor.com/api/projects/status/github/ptomulik/scons-tool-gnuplot?svg=true
+    :target: https://ci.appveyor.com/project/ptomulik/scons-tool-gnuplot
+
 Gnuplot tool for scons_. For tarball and documentation see `project page at
 sourceforge.net`_.
 
 INSTALLATION
 ------------
 
-Copy the ``gnuplot/`` directory to your project's ``site_scons/site_tools/`` or
-to ``~/.scons/site_scons/site_tools/`` (per user configuration). See SCons manual
-for details.
+There are few ways to install this tool for your project.
+
+From pypi_
+^^^^^^^^^^
+
+This method may be preferable if you build your project under a virtualenv. To
+add gnuplot tool from pypi_, type (within your wirtualenv):
+
+.. code-block:: shell
+
+   pip install scons-tool-loader scons-tool-gnuplot
+
+or, if your project uses pipenv_:
+
+.. code-block:: shell
+
+   pipenv install --dev scons-tool-loader scons-tool-gnuplot
+
+Alternatively, you may add this to your ``Pipfile``
+
+.. code-block::
+
+   [dev-packages]
+   scons-tool-loader = "*"
+   scons-tool-gnuplot = "*"
+
+
+The tool will be installed as a namespaced package ``sconstool.gnuplot``
+in project's virtual environment. You may further use scons-tool-loader_
+to load the tool.
+
+As a git submodule
+^^^^^^^^^^^^^^^^^^
+
+#. Create new git repository:
+
+   .. code-block:: shell
+
+      mkdir /tmp/prj && cd /tmp/prj
+      touch README.rst
+      git init
+
+#. Add the `scons-tool-gnuplot`_ as a submodule:
+
+   .. code-block:: shell
+
+      git submodule add git://github.com/ptomulik/scons-tool-gnuplot.git site_scons/site_tools/gnuplot
+
+#. For python 2.x create ``__init__.py`` in ``site_tools`` directory:
+
+   .. code-block:: shell
+
+      touch site_scons/site_tools/__init__.py
+
+   this will allow to directly import ``site_tools.gnuplot`` (this may be required by other tools).
 
 
 REQUIREMENTS
@@ -18,134 +81,19 @@ REQUIREMENTS
 To perform certain activities, you may need the following packages (listed per
 task).
 
-TO DOWNLOAD DEPENDENCIES FROM EXTERNAL REPOSITORIES
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Sometimes it may be necessary to download files from other people's repositories,
-for example test framework is necessary to run tests. We have some scripts to
-automatize the download process, and they require the following software
-
-  - curl_ program
-
-TO RUN TESTS
-^^^^^^^^^^^^
-
-  - scons_ test framework, that is ``QMTest`` directory and ``runtests.py``
-    script,
-
-TO GENERATE API DOCUMENTATION
+To generate API documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  - epydoc_,
-  - python-docutils_,
-  - python-pygments_.
+- epydoc_,
+- python-docutils_,
+- python-pygments_.
 
-TO GENERATE USER DOCUMENTATION
+To generate user documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  - docbook-xml_,
-  - xsltproc_,
+- docbook-xml_,
+- xsltproc_,
 
-and (locally downloaded)
-
-  - `scons docbook tool`_.
-
-ADDITIONAL STEPS
-----------------
-
-If this is a fresh clone/checkout from repository, you may wish to perform a
-few additional steps as below (this is mainly for gnuplot tool developers
-and package maintainers)
-
-DOWNLOAD DEPENDENCIES FROM EXTERNAL REPOSITORIES
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Some files from external projects need to be downloaded into the
-development tree (they are usually not a part of any installable package). The
-files are obtainable from external repositories, and may be easily downloaded
-on GNU systems with the script ``bin/download-deps.sh`` ::
-
-    bin/download-deps.sh
-
-The development tree may be later cleaned-up from the downloaded files by::
-
-    bin/delete-deps.sh
-
-Particular projects, that this project depends on, are mentioned in the
-following subsections. You may look through it if the above scripts do not
-work well on your platform. Otherwise, all of the following dependencies
-are handled by ``download-deps.sh`` and ``delete-deps.sh`` scripts.
-
-All downloaded files are ignored by ``.gitignore``, so you don't have to worry
-about deleting them before doing commits.
-
-TESTING FRAMEWORK
-`````````````````
-
-If you wish to run end-to-end tests for this tool, you need the scons_ testing
-framework. The following files/directories need to be downloaded (and placed as
-shown in table relative to the top-level source directory)
-
- ========================= ==================================================
-  source file/directory                   target file/directory
- ========================= ==================================================
-  ``QMTest/``               ``QMTest/``
- ------------------------- --------------------------------------------------
-  ``runtest.py``            ``runtest.py``
- ========================= ==================================================
-
-On GNU system you may use the ``bin/download-test-framework.sh``  script to
-download the above files (requires curl_ to be installed on your system)::
-
-    bin/download-test-framework.sh
-
-This script clones the scons repository to a temporary directory and copies the
-``QMTest`` subdirectory and ``runtest.py`` script from the repository to the
-local source tree. The test framework may be later removed with the
-``bin/delete-test-framework.sh`` script::
-
-    bin/delete-test-framework.sh
-
-You may also delete manually files/directories comprising the framework.
-
-
-SCONS DOCBOOK TOOL
-``````````````````
-
-If you wish to generate user's guide, you need to download locally the `scons
-docbook tool`_. It is obtainable from Dirk Baechle's repository hosted on
-bitbucket.org. The following files/directories need to be downloaded (and
-placed as shown in table relative to the top-level source directory)
-
- ========================= =====================================================
-  source file/directory                   target file/directory
- ========================= =====================================================
-  ``__init__.py``           ``site_scons/site_tools/docbook/__init__.py``
- ------------------------- -----------------------------------------------------
-  ``utils/``                ``site_scons/site_tools/docbook/utils``
- ------------------------- -----------------------------------------------------
-  ``docbook-xsl-<ver>/``    ``site_scons/site_tools/docbook/docbook-xsl-<ver>``
- ========================= =====================================================
-
-On GNU system you may use the ``bin/download-docbook-tool.sh``  script to
-download the docbook tool (requires curl_ to be installed on your system)::
-
-    bin/download-docbook-tool.sh
-
-The tool may be later removed with the ``bin/delete-docbook-tool.sh`` script::
-
-    bin/delete-test-framework.sh
-
-You may also delete manually files/directories comprising the tool package.
-
-RUNNING TESTS
--------------
-
-To run all the tests type::
-
-    SCONS_EXTERNAL_TEST=1 python runtest.py -a
-
-This requires the presence of the testing framework in the development tree.
 
 GENERATING DOCUMENTATION
 ------------------------
@@ -153,27 +101,32 @@ GENERATING DOCUMENTATION
 Scons gnuplot tool has an API documentation and user manual. The documentation
 may be generated as follows (see also REQUIREMENTS).
 
-API DOCUMENTATION
+API documentation
 ^^^^^^^^^^^^^^^^^
+
+Before generating API docs, you should install our module in edit mode::
+
+   pipenv run pip install -e .
 
 To generate API documentation type::
 
-    scons api-doc
+   pipenv run scons api-doc
 
-The generated API documentation will be written to ``build/doc/api/``.
+The generated API documentation will be written to ``build/doc/api/``. Note,
+that API doc generator (epydoc) works only with python2.
 
-USER MANUAL
+User manual
 ^^^^^^^^^^^
 
 To generate user manual type::
 
-    scons user-doc
+   pipenv run scons user-doc
 
 The generated documentation will be written to ``build/doc/user/``.
 
 LICENSE
 -------
-Copyright (c) 2013 by Pawel Tomulik
+Copyright (c) 2013-2018 by Pawel Tomulik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -202,4 +155,8 @@ SOFTWARE
 .. _xsltproc: http://xmlsoft.org/libxslt/
 .. _scons docbook tool: https://bitbucket.org/dirkbaechle/scons_docbook/
 .. _project page at sourceforge.net: http://sourceforge.net/projects/scons-gnuplot/
+.. _pipenv: https://pipenv.readthedocs.io/
+.. _pypi: https://pypi.org/
+.. _scons-tool-loader: https://github.com/ptomulik/scons-tool-loader/
 
+.. <!--- vim: set expandtab tabstop=2 shiftwidth=2 syntax=rst: -->
