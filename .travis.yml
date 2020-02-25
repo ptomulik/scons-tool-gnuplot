@@ -12,20 +12,11 @@ addons:
     packages:
       - gnuplot
 
-before_install:
-  - export REQUIREMENTS_DEV_TXT=`python -c 'import sys;print("requirements" + str(sys.version_info.major) + "-dev.txt")'`
-  - echo "REQUIREMENTS_DEV_TXT=$REQUIREMENTS_DEV_TXT"
-
 install:
   - pip install -U pip
   - pip --version
-  - pip install -r requirements.txt
-  - pip install -r "$REQUIREMENTS_DEV_TXT"
+  - pip install tox-travis
   - python bin/downloads.py
 
-
-before_script:
-  - which python
-
 script:
-  - python runtest --verbose=2 -e test/system
+  - tox

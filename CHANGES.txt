@@ -1,3 +1,9 @@
+RELEASE 0.7.2 - Tue, Feb 25 2020
+ - switch CIs to use tox
+RELEASE 0.7.1 - Tue, Apr 23 2019
+ - updated requirements-dev.txt
+RELEASE 0.7.0 - Thu, Nov 8 2018
+ - added pypi support
 RELEASE 0.6a - Thu, 15 Dec 2016
  - use "cd /D ..." on Windows
  - fix quoting variables passed to gnuplot (win32)
