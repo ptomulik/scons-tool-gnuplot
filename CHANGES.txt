@@ -1,3 +1,5 @@
+RELEASE 0.7.3 - ???
+ - modified scripts such that CI tests shall pass also under py2.7.
 RELEASE 0.7.2 - Tue, Feb 25 2020
  - switch CIs to use tox
 RELEASE 0.7.1 - Tue, Apr 23 2019
