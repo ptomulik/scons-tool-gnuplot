@@ -1,4 +1,5 @@
 RELEASE 0.7.3 - ???
+ - declared all *.py sources as utf8 (PEP 263)
  - modified scripts such that CI tests shall pass also under py2.7.
 RELEASE 0.7.2 - Tue, Feb 25 2020
  - switch CIs to use tox
