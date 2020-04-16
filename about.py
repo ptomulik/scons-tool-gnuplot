@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Version information, etc."""
 
-#  DskLayout version info
-__version__ = '0.7.3'
+# version info
+__version__ = '0.7.4'
 """Package version as a string."""
 
 # Local Variables:

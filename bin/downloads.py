@@ -1,8 +1,8 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#! /usr/bin/env python
 
 #
-# Copyright (c) 2014-2020 by Paweł Tomulik
+# Copyright (c) 2018-2020 by Paweł Tomulik
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -110,6 +110,9 @@ def download_scons_test(**kw):
     shutil.move(os.path.join(destdir, 'runtest.py'), os.path.join(destdir, 'runtest'))
     return 0
 
+def is_for_py2():
+    return sys.version_info.major == 2 or (os.getenv('TOXENV') or '').startswith('py2')
+
 # The script...
 _script = os.path.basename(sys.argv[0])
 _scriptabs = os.path.realpath(sys.argv[0])
@@ -121,32 +124,10 @@ _all_packages = [ 'scons-test' ]
 _default_packages = [ 'scons-test', ]
 
 # scons versions other than x.y.z
-_scons_versions = [
-        'master',
-        '3.1.2',
-        '3.1.1',
-        '3.1.0',
-        '3.0.5',
-        '3.0.4',
-        '3.0.3',
-        '3.0.2',
-        '3.0.1',
-        '3.0.0',
-        '2.5.1',
-        '2.5.0',
-        '2.4.1',
-        '2.4.0',
-        '2.3.1',
-        '2.3.0',
-        '2.2.0',
-        '2.1.0.final.0'
-]
-if sys.version_info.major == 2 or (os.getenv('TOXENV') or '').startswith('py2'):
-    _default_scons_version = '3.0.5'
-else:
-    _default_scons_version = _scons_versions[0]
-
-# scons-test
+_scons_versions = ['master', '2.1.0.final.0']
+# default scons version
+_default_scons_version = '3.0.5' if is_for_py2() else _scons_versions[0]
+# default scons-test version
 _default_scons_test_version = _default_scons_version
 
 _parser = argparse.ArgumentParser(

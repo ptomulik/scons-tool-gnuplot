@@ -1,3 +1,5 @@
+RELEASE 0.7.4 - Fri, Apr 17 2020
+ - fixed issue #4 - review and update
 RELEASE 0.7.3 - Wed, Feb 26 2020
  - declared all *.py sources as utf8 (PEP 263)
  - modified scripts such that CI tests shall pass also under py2.7.
