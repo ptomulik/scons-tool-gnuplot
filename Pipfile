@@ -3,9 +3,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [dev-packages]
-scons = ">=3.0.1"
+scons-select = { path = "./deps/scons-select" }
 twine = "*"
 scons-tool-loader = ">=0.1.9"
 

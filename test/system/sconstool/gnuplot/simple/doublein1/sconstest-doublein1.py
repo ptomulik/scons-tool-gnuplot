@@ -1,5 +1,5 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#! /usr/bin/env python
 #
 # Copyright (c) 2013-2020 by Paweł Tomulik
 #
